@@ -528,6 +528,224 @@
   .tt.tip-active::before {
     opacity: 1;
   }
+
+  /* ---- OFFERTLISTA ---- */
+  .add-btn {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(240,165,0,0.05));
+    border: 1.5px dashed var(--accent);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .add-btn:active { opacity: 0.7; transform: scale(0.98); }
+  .add-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+  .quote-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .quote-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .quote-header-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .quote-clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .quote-clear-btn:active { color: var(--accent2); border-color: var(--accent2); }
+
+  .quote-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .quote-row:last-of-type { border-bottom: none; }
+  .quote-row:active { background: var(--surface2); }
+
+  .quote-info { flex: 1; min-width: 0; }
+  .quote-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .quote-sub {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .quote-qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .quote-qty-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    width: 30px;
+    height: 34px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.1s;
+  }
+  .quote-qty-btn:active { color: var(--accent); }
+  .quote-qty-input {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.95rem;
+    width: 32px;
+    text-align: center;
+    outline: none;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .quote-prices {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .quote-total {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .quote-unit {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 1px;
+  }
+
+
+  .quote-edit-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1rem;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .quote-edit-btn:active { color: var(--accent3); }
+  .quote-row.editing {
+    background: rgba(79,195,247,0.07);
+    border-left: 3px solid var(--accent3);
+  }
+  .quote-del-btn {
+    background: none;
+    border: none;
+    color: var(--border);
+    font-size: 1.1rem;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .quote-del-btn:active { color: var(--accent2); }
+
+  .quote-footer {
+    background: var(--surface2);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 2px solid var(--accent);
+  }
+  .quote-footer-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .quote-footer-total {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .quote-footer-currency {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-left: 3px;
+  }
+  .quote-footer-sub {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+    text-align: right;
+  }
   .empty-state {
     text-align: center;
     padding: 30px 20px;
@@ -725,6 +943,38 @@
     </div>
   </div>
 
+  <!-- LÄGG TILL-KNAPP -->
+  <button class="add-btn disabled" id="addToListBtn" onclick="addToList()">
+    <span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA
+  </button>
+
+  <!-- OFFERTLISTA -->
+  <div id="quoteListWrap" style="display:none;">
+    <div class="quote-card">
+      <div class="quote-header">
+        <span class="quote-header-title">Offertlista</span>
+        <div style="display:flex;gap:8px;">
+          <button class="quote-clear-btn" id="copyListBtn" onclick="copyList()">⎘ KOPIERA TEXT</button>
+          <button class="quote-clear-btn" onclick="clearList()">RENSA</button>
+        </div>
+      </div>
+      <div id="quoteRows"></div>
+      <div class="quote-footer">
+        <div>
+          <div class="quote-footer-label">Totalt</div>
+          <div class="quote-footer-sub" id="quoteFooterSub"></div>
+        </div>
+        <div style="text-align:right;">
+          <div>
+            <span class="quote-footer-total" id="quoteGrandTotal">0,00</span>
+            <span class="quote-footer-currency">kr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </main>
 
 <script>
@@ -915,6 +1165,7 @@
       document.getElementById('marginPreview').textContent = '— kr';
       document.getElementById('labourCutVal').textContent = '— kr';
       document.getElementById('labourBreakdown').innerHTML = '';
+      document.getElementById('addToListBtn').classList.add('disabled');
       return;
     }
 
@@ -1093,6 +1344,7 @@
       ? (QTY > 1 ? 'FÖRSÄLJNING TOT' : 'FÖRSÄLJNINGSPRIS')
       : (QTY > 1 ? 'TOTALT' : 'PRIS');
 
+    document.getElementById('addToListBtn').classList.remove('disabled');
     area.innerHTML =
       '<div class="result-card">' +
         '<div class="card-title" style="margin-bottom:12px;">' + state.mat + ' — ' + L + '×' + W + '×' + T + ' mm</div>' +
@@ -1193,6 +1445,274 @@
       if (icon) icon.textContent = '🌙';
     }
   })();
+
+
+  // ---- OFFERTLISTA ----
+  const quoteList = [];
+
+  function addToList() {
+    const L   = parseFloat(document.getElementById('length').value)    || 0;
+    const W   = parseFloat(document.getElementById('width').value)     || 0;
+    const T   = parseFloat(document.getElementById('thickness').value) || 0;
+    const P   = parseFloat(document.getElementById('kgprice').value)   || 0;
+    const QTY = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
+    if (!L || !W || !T || !P) return;
+
+    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    // Räkna ut samma siffror som calculate()
+    const volM3    = (L/1000) * (W/1000) * (T/1000);
+    const weightKg = volM3 * state.density;
+    const matCost  = weightKg * P;
+
+    let cutCost = 0, cutMethod = '';
+    if (state.cutEnabled) {
+      const customLen = parseFloat(document.getElementById('cutLength').value);
+      const cutLenM   = (customLen > 0 ? customLen : 2*(L+W)) / 1000;
+      const rate      = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, T);
+      cutCost         = cutLenM * rate;
+      cutMethod       = isGasMethod() ? 'Gas' : 'Plasma';
+    }
+
+    let labourCost = 0;
+    if (state.labourEnabled) {
+      const labourRateH  = parseFloat(document.getElementById('labourRate').value)  || 450;
+      const setupMin     = parseFloat(document.getElementById('setupTime').value)   || 0;
+      const camMin       = parseFloat(document.getElementById('camTime').value)     || 0;
+      const handleMin    = parseFloat(document.getElementById('handleTime').value)  || 0;
+      const perMin       = labourRateH / 60;
+      let cutTimeMin     = 0;
+      if (state.cutEnabled) {
+        const useGas = isGasMethod();
+        const tbl    = useGas ? GAS_SPD : PLASMA_SPD;
+        let spd      = lookupSpd(T, tbl);
+        if (!useGas) {
+          if (state.mat === 'ALU')    spd *= 1.15;
+          if (state.mat === '304')    spd *= 0.75;
+          if (state.mat === '316L')   spd *= 0.70;
+          if (state.mat === 'P265GH') spd *= 0.92;
+        }
+        cutTimeMin = ((2*(L+W)/1000) * 1000) / spd;
+      }
+      labourCost = (cutTimeMin * perMin * QTY) + ((setupMin + camMin) * perMin) + (handleMin * perMin * QTY);
+    }
+
+    const inCostPerSt = (matCost + cutCost + labourCost) / QTY;
+    let marginCost = 0;
+    if (state.marginEnabled) {
+      const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
+      marginCost = (inCostPerSt * QTY) * (MRG / 100);
+    }
+    const sellPerSt = inCostPerSt + marginCost / QTY;
+
+    const cutLabel = state.cutEnabled ? ' · ' + cutMethod : '';
+    quoteList.push({
+      id: Date.now(),
+      title: state.mat + ' ' + L + '×' + W + '×' + T + ' mm' + cutLabel,
+      qty: QTY,
+      pricePerSt: sellPerSt,
+      weightPerSt: weightKg,
+      // Snapshot för redigering
+      snap: {
+        mat: state.mat, density: state.density,
+        L, W, T, P, QTY,
+        cutEnabled: state.cutEnabled,
+        cutLength: document.getElementById('cutLength').value,
+        cutRate: document.getElementById('cutRate').value,
+        cutRateUserEdited: state.cutRateUserEdited,
+        labourEnabled: state.labourEnabled,
+        labourRate: document.getElementById('labourRate').value,
+        setupTime: document.getElementById('setupTime').value,
+        camTime: document.getElementById('camTime').value,
+        handleTime: document.getElementById('handleTime').value,
+        marginEnabled: state.marginEnabled,
+        marginPct: document.getElementById('marginPct').value,
+      }
+    });
+
+    renderList();
+
+    // Kort visuell feedback på knappen
+    const btn = document.getElementById('addToListBtn');
+    btn.textContent = '✓ TILLAGD';
+    setTimeout(() => { btn.innerHTML = '<span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA'; }, 900);
+  }
+
+
+  function restoreFromList(id) {
+    const item = quoteList.find(i => i.id === id);
+    if (!item) return;
+    const s = item.snap;
+
+    // Material
+    document.querySelectorAll('.mat-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mat === s.mat);
+    });
+    state.mat = s.mat;
+    state.density = s.density;
+    document.getElementById('densityVal').textContent = s.density.toLocaleString('sv-SE');
+
+    // Dimensioner
+    document.getElementById('length').value    = s.L;
+    document.getElementById('width').value     = s.W;
+    document.getElementById('thickness').value = s.T;
+    document.getElementById('kgprice').value   = s.P;
+    document.getElementById('qty').value       = s.QTY;
+
+    // Skärning
+    state.cutEnabled = s.cutEnabled;
+    document.getElementById('cutToggle').classList.toggle('on', s.cutEnabled);
+    document.getElementById('cutInputs').classList.toggle('disabled', !s.cutEnabled);
+    document.getElementById('cutBadgeWrap').style.display = s.cutEnabled ? 'block' : 'none';
+    document.getElementById('cutToggleSub').textContent = s.cutEnabled ? 'Beräknas separat och läggs på' : 'Ej inkluderat i kg-priset';
+    document.getElementById('cutLength').value = s.cutLength;
+    document.getElementById('cutRate').value   = s.cutRate;
+    state.cutRateUserEdited = s.cutRateUserEdited;
+
+    // Personal
+    state.labourEnabled = s.labourEnabled;
+    document.getElementById('labourToggle').classList.toggle('on', s.labourEnabled);
+    const labInputs = document.getElementById('labourInputs');
+    labInputs.style.opacity       = s.labourEnabled ? '1' : '0.3';
+    labInputs.style.pointerEvents = s.labourEnabled ? 'auto' : 'none';
+    ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
+      document.getElementById(id).disabled = !s.labourEnabled;
+    });
+    document.getElementById('labourRate').value  = s.labourRate;
+    document.getElementById('setupTime').value   = s.setupTime;
+    document.getElementById('camTime').value     = s.camTime;
+    document.getElementById('handleTime').value  = s.handleTime;
+
+    // Marginal
+    state.marginEnabled = s.marginEnabled;
+    document.getElementById('marginToggle').classList.toggle('on', s.marginEnabled);
+    document.getElementById('marginPct').disabled = !s.marginEnabled;
+    document.getElementById('marginPct').value = s.marginPct;
+
+    syncCutMethod();
+    calculate();
+
+    // Scrolla upp till kalkylatorn
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Markera raden som aktiv
+    document.querySelectorAll('.quote-row').forEach(r => r.classList.remove('editing'));
+    const rowEl = document.querySelector('[data-qid="' + id + '"]');
+    if (rowEl) rowEl.classList.add('editing');
+  }
+
+  function copyList() {
+    if (quoteList.length === 0) return;
+    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    let text = 'HMV PLÅTPRIS — ' + new Date().toLocaleDateString('sv-SE') + '\n';
+    text += '─────────────────────────────\n';
+    let grandTotal = 0, grandWeight = 0, grandQty = 0;
+    quoteList.forEach((item, i) => {
+      const rowTotal = item.pricePerSt * item.qty;
+      grandTotal  += rowTotal;
+      grandWeight += item.weightPerSt * item.qty;
+      grandQty    += item.qty;
+      text += (i+1) + '. ' + item.title + '\n';
+      text += '   ' + item.qty + ' st  ×  ' + fmt(item.pricePerSt) + ' kr/st  =  ' + fmt(rowTotal) + ' kr\n';
+    });
+    text += '─────────────────────────────\n';
+    text += 'TOTALT: ' + fmt(grandTotal) + ' kr\n';
+    text += '(' + grandQty + ' st · ' + fmt(grandWeight) + ' kg)\n';
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyListBtn');
+        btn.textContent = '✓ KOPIERAT';
+        setTimeout(() => { btn.textContent = '⎘ KOPIERA TEXT'; }, 1800);
+      });
+    } else {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const btn = document.getElementById('copyListBtn');
+      btn.textContent = '✓ KOPIERAT';
+      setTimeout(() => { btn.textContent = '⎘ KOPIERA TEXT'; }, 1800);
+    }
+  }
+
+  function renderList() {
+    const wrap = document.getElementById('quoteListWrap');
+    const rowsEl = document.getElementById('quoteRows');
+    const grandEl = document.getElementById('quoteGrandTotal');
+    const subEl   = document.getElementById('quoteFooterSub');
+
+    if (quoteList.length === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'block';
+
+    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    let html = '';
+    let grandTotal = 0;
+    let grandWeight = 0;
+    let grandQty = 0;
+
+    quoteList.forEach(item => {
+      const rowTotal = item.pricePerSt * item.qty;
+      grandTotal  += rowTotal;
+      grandWeight += item.weightPerSt * item.qty;
+      grandQty    += item.qty;
+
+      html += '<div class="quote-row" data-qid="' + item.id + '">' +
+        '<div class="quote-info">' +
+          '<div class="quote-title">' + item.title + '</div>' +
+          '<div class="quote-sub">' + fmt(item.pricePerSt) + ' kr/st</div>' +
+        '</div>' +
+        '<div class="quote-qty-wrap">' +
+          '<button class="quote-qty-btn" onclick="changeQty(' + item.id + ',-1)">−</button>' +
+          '<input class="quote-qty-input" type="number" value="' + item.qty + '" min="1" ' +
+            'onchange="setQty(' + item.id + ', this.value)" ' +
+            'oninput="setQty(' + item.id + ', this.value)">' +
+          '<button class="quote-qty-btn" onclick="changeQty(' + item.id + ',1)">+</button>' +
+        '</div>' +
+        '<div class="quote-prices">' +
+          '<div class="quote-total">' + fmt(rowTotal) + '</div>' +
+          '<div class="quote-unit">kr</div>' +
+        '</div>' +
+        '<button class="quote-edit-btn" title="Redigera" onclick="restoreFromList(' + item.id + ')">✎</button>' +
+        '<button class="quote-del-btn" title="Ta bort" onclick="removeFromList(' + item.id + ')">✕</button>' +
+      '</div>';
+    });
+
+    rowsEl.innerHTML = html;
+    grandEl.textContent = fmt(grandTotal);
+    subEl.textContent = grandQty + ' st · ' + fmt(grandWeight) + ' kg totalt';
+  }
+
+  function changeQty(id, delta) {
+    const item = quoteList.find(i => i.id === id);
+    if (!item) return;
+    item.qty = Math.max(1, item.qty + delta);
+    renderList();
+  }
+
+  function setQty(id, val) {
+    const item = quoteList.find(i => i.id === id);
+    if (!item) return;
+    const n = parseInt(val);
+    if (n > 0) { item.qty = n; renderList(); }
+  }
+
+  function removeFromList(id) {
+    const idx = quoteList.findIndex(i => i.id === id);
+    if (idx >= 0) quoteList.splice(idx, 1);
+    renderList();
+  }
+
+  function clearList() {
+    if (quoteList.length === 0) return;
+    if (confirm('Rensa hela listan?')) { quoteList.length = 0; renderList(); }
+  }
 
   // ---- TOOLTIP TOUCH (långtryck) ----
   let tipTimer = null;

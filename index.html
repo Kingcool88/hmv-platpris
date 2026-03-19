@@ -1532,9 +1532,23 @@
 
     renderList();
 
+    // Rensa fälten efter att plåten lagts till
+    ['length','width','thickness','kgprice','qty'].forEach(id => {
+      const el = document.getElementById(id);
+      if (id === 'qty') el.value = '1';
+      else el.value = '';
+    });
+    document.getElementById('cutLength').value = '';
+    state.cutRateUserEdited = false;
+    document.getElementById('addToListBtn').classList.add('disabled');
+    document.getElementById('resultArea').innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
+    document.getElementById('marginPreview').textContent = '— kr';
+    document.getElementById('labourCutVal').textContent = '— kr';
+    document.getElementById('labourBreakdown').innerHTML = '';
+
     // Kort visuell feedback på knappen
     const btn = document.getElementById('addToListBtn');
-    btn.textContent = '✓ TILLAGD';
+    btn.innerHTML = '✓ TILLAGD';
     setTimeout(() => { btn.innerHTML = '<span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA'; }, 900);
   }
 

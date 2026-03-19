@@ -6,812 +6,189 @@
 <title>HMV Plåtpris</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: #2e3350;
-    --accent: #f0a500;
-    --accent2: #e06030;
-    --accent3: #4fc3f7;
-    --text: #e8eaf0;
-    --muted: #7880a0;
-    --green: #2ecc71;
-    --radius: 12px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Roboto Mono', monospace;
-    min-height: 100dvh;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
-    border-bottom: 2px solid var(--accent);
-    padding: 18px 20px 14px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .logo-icon svg { width: 20px; height: 20px; fill: #0f1117; }
-
-  header h1 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-transform: uppercase;
-    line-height: 1;
-  }
-  header small {
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 2px;
-    display: block;
-    margin-top: 2px;
-  }
-
-  main {
-    flex: 1;
-    padding: 16px;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding-bottom: 30px;
-  }
-
-  .section-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .material-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .mat-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    padding: 14px 6px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mat-btn .mat-sub {
-    display: block;
-    font-size: 0.6rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-    font-family: 'Roboto Mono', monospace;
-    font-weight: 400;
-    margin-top: 2px;
-  }
-  .mat-btn.active {
-    border-color: var(--accent);
-    background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(240,165,0,0.05));
-    color: var(--accent);
-    box-shadow: 0 0 16px rgba(240,165,0,0.2);
-  }
-  .mat-btn.active .mat-sub { color: rgba(240,165,0,0.6); }
-  .mat-btn:active { transform: scale(0.95); }
-
-  .card {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-
-  .card-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .dim-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-  }
-
-  .input-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .input-wrap label {
-    font-size: 0.6rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .input-wrap input {
-    background: var(--bg);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 1.1rem;
-    padding: 12px 10px;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.15s;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .input-wrap input:focus { border-color: var(--accent); }
-  .input-wrap input::placeholder { color: var(--border); }
-  .input-wrap input:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .qty-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .density-badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .density-badge .db-label {
-    font-size: 0.55rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .density-badge .db-value {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  /* TOGGLE */
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0 4px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-  .toggle {
-    width: 44px; height: 24px;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    position: relative;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .toggle::after {
-    content: '';
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 16px; height: 16px;
-    background: var(--muted);
-    border-radius: 50%;
-    transition: all 0.2s;
-  }
-  .toggle.on { background: rgba(240,165,0,0.2); border-color: var(--accent); }
-  .toggle.on::after { transform: translateX(20px); background: var(--accent); }
-  .toggle-label { font-size: 0.75rem; letter-spacing: 1px; color: var(--text); flex: 1; }
-  .toggle-sub { font-size: 0.6rem; color: var(--muted); letter-spacing: 1px; }
-
-  /* SKÄRMETOD BADGE */
-  .cut-method-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-top: 10px;
-    transition: all 0.2s;
-  }
-  .cut-method-badge.plasma { border-color: rgba(79,195,247,0.5); color: var(--accent3); }
-  .cut-method-badge.gas { border-color: rgba(224,96,48,0.5); color: var(--accent2); }
-  .cut-method-badge .cm-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-
-  .cut-inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 12px;
-    transition: opacity 0.2s;
-  }
-  .cut-inputs.disabled { opacity: 0.3; pointer-events: none; }
-
-  .cut-note {
-    margin-top: 8px;
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    line-height: 1.5;
-  }
-
-  /* MARGIN */
-  .margin-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .margin-preview {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .margin-preview .mp-label { font-size: 0.55rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-  .margin-preview .mp-value { font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--green); }
-
-  /* PRICE SOURCE */
-  .price-source {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-    color: var(--muted);
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
-  .dot.manual { background: var(--accent2); animation: none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .fetch-btn {
-    margin-left: auto;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--muted);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    white-space: nowrap;
-  }
-  .fetch-btn:active { background: var(--surface2); color: var(--text); }
-
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* RESULT */
-  .result-card {
-    background: linear-gradient(135deg, var(--surface2), var(--surface));
-    border: 2px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 20px 16px;
-    box-shadow: 0 0 30px rgba(240,165,0,0.1);
-    position: relative;
-    overflow: hidden;
-  }
-  .result-card::before {
-    content: '';
-    position: absolute; top: 0; right: 0;
-    width: 120px; height: 120px;
-    background: radial-gradient(circle, rgba(240,165,0,0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .result-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .result-row:last-of-type { border-bottom: none; }
-  .result-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-  .result-value { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1.05rem; color: var(--text); }
-  .result-value.cut { color: var(--accent3); }
-  .result-value.margin-val { color: var(--green); }
-  .result-value.sell { color: var(--accent); }
-
-  .result-divider { height: 1px; background: rgba(240,165,0,0.25); margin: 4px 0; }
-
-  .result-total {
-    margin-top: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .result-total .rt-label { font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
-  .result-total .rt-price { font-family: 'Rajdhani', sans-serif; font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1; }
-  .result-total .rt-currency { font-size: 1rem; color: var(--muted); margin-left: 4px; }
-
-
-  /* LABOUR */
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 0.65rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-  }
-  .info-row:last-child { border-bottom: none; }
-  .info-row span:last-child {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .labour-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .labour-time-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .result-value.labour { color: #c792ea; }
-
-
-  /* LIGHT MODE */
-  body.light {
-    --bg: #f0f2f7;
-    --surface: #ffffff;
-    --surface2: #e8eaf2;
-    --border: #c8cce0;
-    --accent: #d48a00;
-    --accent2: #c04820;
-    --accent3: #0288d1;
-    --text: #1a1d2e;
-    --muted: #5a6080;
-    --green: #1a9950;
-    --radius: 12px;
-  }
-  body.light header {
-    background: linear-gradient(135deg, #ffffff 0%, #e8eaf2 100%);
-  }
-  body.light .input-wrap input {
-    background: #f8f9fc;
-  }
-  body.light .result-card {
-    background: linear-gradient(135deg, #fff8e8, #ffffff);
-  }
-  body.light .tt::after {
-    background: #ffffff;
-    color: var(--text);
-  }
-
-  /* THEME BUTTON */
-  .theme-btn {
-    margin-left: auto;
-    background: none;
-    border: 1.5px solid rgba(240,165,0,0.4);
-    border-radius: 20px;
-    color: var(--accent);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-    padding: 5px 12px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .theme-btn:active { opacity: 0.7; }
-
-  /* TOOLTIP */
-  .tt {
-    position: relative;
-    cursor: help;
-  }
-  .tt::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
-    background: #2a2d3e;
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.5px;
-    line-height: 1.6;
-    padding: 8px 12px;
-    white-space: pre;
-    width: max-content;
-    max-width: 280px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-    z-index: 100;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
-  .tt:hover::after,
-  .tt.tip-active::after {
-    opacity: 1;
-  }
-  /* Arrow */
-  .tt::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% + 2px);
-    right: 16px;
-    border: 6px solid transparent;
-    border-top-color: var(--accent);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-    z-index: 101;
-  }
-  .tt:hover::before,
-  .tt.tip-active::before {
-    opacity: 1;
-  }
-
-  /* ---- OFFERTLISTA ---- */
-  .add-btn {
-    width: 100%;
-    background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(240,165,0,0.05));
-    border: 1.5px dashed var(--accent);
-    border-radius: var(--radius);
-    color: var(--accent);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 2px;
-    padding: 14px;
-    cursor: pointer;
-    transition: all 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .add-btn:active { opacity: 0.7; transform: scale(0.98); }
-  .add-btn.disabled { opacity: 0.3; pointer-events: none; }
-
-  .quote-card {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .quote-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .quote-header-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .quote-clear-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--muted);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-    padding: 3px 10px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .quote-clear-btn:active { color: var(--accent2); border-color: var(--accent2); }
-
-  .quote-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-  .quote-row:last-of-type { border-bottom: none; }
-  .quote-row:active { background: var(--surface2); }
-
-  .quote-info { flex: 1; min-width: 0; }
-  .quote-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .quote-sub {
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-top: 2px;
-  }
-
-  .quote-qty-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .quote-qty-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 1.1rem;
-    width: 30px;
-    height: 34px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.1s;
-  }
-  .quote-qty-btn:active { color: var(--accent); }
-  .quote-qty-input {
-    background: none;
-    border: none;
-    color: var(--text);
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.95rem;
-    width: 32px;
-    text-align: center;
-    outline: none;
-    padding: 0;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .quote-prices {
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .quote-total {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  .quote-unit {
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-top: 1px;
-  }
-
-
-  .quote-edit-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 1rem;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-  .quote-edit-btn:active { color: var(--accent3); }
-  .quote-row.editing {
-    background: rgba(79,195,247,0.07);
-    border-left: 3px solid var(--accent3);
-  }
-  .quote-del-btn {
-    background: none;
-    border: none;
-    color: var(--border);
-    font-size: 1.1rem;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-  .quote-del-btn:active { color: var(--accent2); }
-
-  .quote-footer {
-    background: var(--surface2);
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    border-top: 2px solid var(--accent);
-  }
-  .quote-footer-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .quote-footer-total {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .quote-footer-currency {
-    font-size: 0.9rem;
-    color: var(--muted);
-    margin-left: 3px;
-  }
-  .quote-footer-sub {
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-top: 2px;
-    text-align: right;
-  }
-  .empty-state {
-    text-align: center;
-    padding: 30px 20px;
-    color: var(--muted);
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .empty-state .es-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+:root {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
+  --accent:#f0a500;--accent2:#e06030;--accent3:#4fc3f7;
+  --text:#e8eaf0;--muted:#7880a0;--green:#2ecc71;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Roboto Mono',monospace;min-height:100dvh;display:flex;flex-direction:column;}
+/* LIGHT MODE */
+body.light{--bg:#f0f2f7;--surface:#fff;--surface2:#e8eaf2;--border:#c8cce0;--accent:#d48a00;--accent2:#c04820;--accent3:#0288d1;--text:#1a1d2e;--muted:#5a6080;--green:#1a9950;}
+body.light header{background:linear-gradient(135deg,#fff,#e8eaf2);}
+body.light .input-wrap input,body.light .input-wrap select{background:#f8f9fc;}
+body.light .result-card{background:linear-gradient(135deg,#fff8e8,#fff);}
+body.light .tt::after{background:#fff;color:var(--text);}
+/* HEADER */
+header{background:linear-gradient(135deg,#1a1d27,#0f1117);border-bottom:2px solid var(--accent);padding:18px 20px 14px;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;}
+.logo-icon{width:36px;height:36px;background:var(--accent);clip-path:polygon(0 0,80% 0,100% 20%,100% 100%,20% 100%,0 80%);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:20px;height:20px;fill:#0f1117;}
+header h1{font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;line-height:1;}
+header small{font-size:.6rem;color:var(--muted);letter-spacing:2px;display:block;margin-top:2px;}
+.theme-btn{margin-left:auto;background:none;border:1.5px solid rgba(240,165,0,.4);border-radius:20px;color:var(--accent);font-family:'Roboto Mono',monospace;font-size:.7rem;letter-spacing:1px;padding:5px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .2s;display:flex;align-items:center;gap:6px;}
+/* MAIN */
+main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-bottom:30px;}
+.section-label{font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+/* PRODUCT TYPE */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.type-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:1px;padding:14px 4px;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.type-btn .type-sub{display:block;font-size:.55rem;letter-spacing:2px;color:var(--muted);font-family:'Roboto Mono',monospace;font-weight:400;margin-top:2px;}
+.type-btn.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(240,165,0,.15),rgba(240,165,0,.05));color:var(--accent);}
+.type-btn.active .type-sub{color:rgba(240,165,0,.6);}
+.type-btn:active{transform:scale(.95);}
+/* MATERIAL */
+.mat-grid{display:grid;gap:8px;}
+.mat-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:1px;padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.mat-btn .mat-sub{display:block;font-size:.55rem;letter-spacing:2px;color:var(--muted);font-family:'Roboto Mono',monospace;font-weight:400;margin-top:2px;}
+.mat-btn.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(240,165,0,.15),rgba(240,165,0,.05));color:var(--accent);}
+.mat-btn.active .mat-sub{color:rgba(240,165,0,.6);}
+.mat-btn:active{transform:scale(.97);}
+/* CARD */
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+/* INPUTS */
+.dim-row{display:grid;gap:10px;}
+.dim-2{grid-template-columns:1fr 1fr;}
+.dim-3{grid-template-columns:1fr 1fr 1fr;}
+.dim-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.input-wrap{display:flex;flex-direction:column;gap:4px;}
+.input-wrap label{font-size:.6rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.input-wrap input,.input-wrap select{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Roboto Mono',monospace;font-size:1.05rem;padding:11px 10px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;}
+.input-wrap input:focus,.input-wrap select:focus{border-color:var(--accent);}
+.input-wrap input::placeholder{color:var(--border);}
+.input-wrap input:disabled{opacity:.35;cursor:not-allowed;}
+/* INFO BADGE */
+.info-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;}
+.info-badge .ib-label{font-size:.55rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.info-badge .ib-value{font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:600;color:var(--text);}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:12px;padding:10px 0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
+.toggle{width:44px;height:24px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;position:relative;flex-shrink:0;transition:all .2s;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:all .2s;}
+.toggle.on{background:rgba(240,165,0,.2);border-color:var(--accent);}
+.toggle.on::after{transform:translateX(20px);background:var(--accent);}
+.toggle-label{font-size:.75rem;letter-spacing:1px;color:var(--text);flex:1;}
+.toggle-sub{font-size:.6rem;color:var(--muted);letter-spacing:1px;}
+/* CUT/SAW METHOD BADGE */
+.method-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:10px;transition:all .2s;}
+.method-badge.plasma{border-color:rgba(79,195,247,.5);color:var(--accent3);}
+.method-badge.gas{border-color:rgba(224,96,48,.5);color:var(--accent2);}
+.method-badge.saw{border-color:rgba(46,204,113,.4);color:var(--green);}
+.method-badge .mb-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.cut-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;transition:opacity .2s;}
+.cut-inputs.disabled{opacity:.3;pointer-events:none;}
+.cut-note{margin-top:8px;font-size:.6rem;color:var(--muted);letter-spacing:1px;line-height:1.5;}
+/* PRICE SOURCE */
+.price-source{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.65rem;letter-spacing:1px;color:var(--muted);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite;}
+.dot.manual{background:var(--accent2);animation:none;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fetch-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:.6rem;letter-spacing:1px;padding:4px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+.fetch-btn:active{background:var(--surface2);color:var(--text);}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* MARGIN */
+.margin-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.margin-preview .mp-label{font-size:.55rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.margin-preview .mp-value{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;color:var(--green);}
+/* LABOUR */
+.labour-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.labour-time-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.65rem;color:var(--muted);letter-spacing:1px;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-row span:last-child{font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;color:var(--text);}
+/* RESULT */
+.result-card{background:linear-gradient(135deg,var(--surface2),var(--surface));border:2px solid var(--accent);border-radius:var(--radius);padding:20px 16px;box-shadow:0 0 30px rgba(240,165,0,.1);position:relative;overflow:hidden;}
+.result-card::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle,rgba(240,165,0,.08),transparent 70%);pointer-events:none;}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border);}
+.result-row:last-of-type{border-bottom:none;}
+.result-label{font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.result-value{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:1.05rem;color:var(--text);}
+.result-value.cut{color:var(--accent3);}
+.result-value.saw-v{color:var(--green);}
+.result-value.margin-val{color:var(--green);}
+.result-value.sell{color:var(--accent);}
+.result-value.labour{color:#c792ea;}
+.result-divider{height:1px;background:rgba(240,165,0,.25);margin:4px 0;}
+.result-total{margin-top:14px;display:flex;justify-content:space-between;align-items:baseline;}
+.result-total .rt-label{font-family:'Rajdhani',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.result-total .rt-price{font-family:'Rajdhani',sans-serif;font-size:2.2rem;font-weight:700;color:var(--accent);line-height:1;}
+.result-total .rt-currency{font-size:1rem;color:var(--muted);margin-left:4px;}
+/* TOOLTIP */
+.tt{position:relative;cursor:help;}
+.tt::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;background:#2a2d3e;border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Roboto Mono',monospace;font-size:.62rem;letter-spacing:.5px;line-height:1.6;padding:8px 12px;white-space:pre-wrap;word-break:break-word;width:max-content;max-width:280px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.tt::before{content:'';position:absolute;bottom:calc(100% + 2px);right:16px;border:6px solid transparent;border-top-color:var(--accent);opacity:0;pointer-events:none;transition:opacity .15s;z-index:101;}
+.tt:hover::after,.tt:hover::before,.tt.tip-active::after,.tt.tip-active::before{opacity:1;}
+/* ADD BUTTON */
+.add-btn{width:100%;background:linear-gradient(135deg,rgba(240,165,0,.15),rgba(240,165,0,.05));border:1.5px dashed var(--accent);border-radius:var(--radius);color:var(--accent);font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;letter-spacing:2px;padding:14px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-btn:active{opacity:.7;transform:scale(.98);}
+.add-btn.disabled{opacity:.3;pointer-events:none;}
+/* QUOTE LIST */
+.quote-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.quote-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;border-bottom:1px solid var(--border);}
+.quote-header-title{font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.quote-clear-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:.6rem;letter-spacing:1px;padding:3px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.quote-clear-btn:active{color:var(--accent2);border-color:var(--accent2);}
+.quote-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .1s;}
+.quote-row:last-of-type{border-bottom:none;}
+.quote-row.editing{background:rgba(79,195,247,.07);border-left:3px solid var(--accent3);}
+.quote-info{flex:1;min-width:0;}
+.quote-title{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.quote-sub{font-size:.6rem;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.quote-qty-wrap{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0;}
+.quote-qty-btn{background:none;border:none;color:var(--muted);font-size:1.1rem;width:30px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+.quote-qty-btn:active{color:var(--accent);}
+.quote-qty-input{background:none;border:none;color:var(--text);font-family:'Roboto Mono',monospace;font-size:.9rem;width:32px;text-align:center;outline:none;padding:0;-webkit-appearance:none;}
+.quote-prices{text-align:right;flex-shrink:0;}
+.quote-total{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);}
+.quote-unit{font-size:.6rem;color:var(--muted);letter-spacing:1px;margin-top:1px;}
+.quote-edit-btn,.quote-del-btn{background:none;border:none;font-size:1rem;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;-webkit-tap-highlight-color:transparent;flex-shrink:0;transition:color .15s;}
+.quote-edit-btn{color:var(--muted);}
+.quote-edit-btn:active{color:var(--accent3);}
+.quote-del-btn{color:var(--border);}
+.quote-del-btn:active{color:var(--accent2);}
+.quote-footer{background:var(--surface2);padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--accent);}
+.quote-footer-label{font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.quote-footer-total{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--accent);line-height:1;}
+.quote-footer-currency{font-size:.9rem;color:var(--muted);margin-left:3px;}
+.quote-footer-sub{font-size:.6rem;color:var(--muted);letter-spacing:1px;margin-top:2px;text-align:right;}
+/* EMPTY */
+.empty-state{text-align:center;padding:30px 20px;color:var(--muted);font-size:.75rem;letter-spacing:2px;text-transform:uppercase;}
+.empty-state .es-icon{font-size:2.5rem;margin-bottom:12px;opacity:.3;}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo-icon">
-    <svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/></svg>
-  </div>
-  <div>
-    <h1>HMV Plåtpris</h1>
-    <small>MATERIALKALKYLATOR</small>
-  </div>
+  <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/></svg></div>
+  <div><h1>HMV Plåtpris</h1><small>MATERIALKALKYLATOR</small></div>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><span id="themeIcon">☀</span></button>
 </header>
-
 <main>
 
-  <!-- MATERIAL -->
+  <!-- STEG 1: PRODUKTTYP -->
   <div>
-    <div class="section-label">Materialval</div>
-    <div class="material-grid" id="matGrid">
-      <button class="mat-btn active" data-mat="S235" data-density="7850">S235<span class="mat-sub">KONSTRUKTIONS</span></button>
-      <button class="mat-btn" data-mat="P265GH" data-density="7850">P265GH<span class="mat-sub">TRYCKKÄRL</span></button>
-      <button class="mat-btn" data-mat="S355" data-density="7850">S355<span class="mat-sub">KONSTRUKTIONS</span></button>
-      <button class="mat-btn" data-mat="ALU" data-density="2700">ALU<span class="mat-sub">ALUMINIUM</span></button>
-      <button class="mat-btn" data-mat="304" data-density="7900">304<span class="mat-sub">ROSTFRITT</span></button>
-      <button class="mat-btn" data-mat="316L" data-density="7980">316L<span class="mat-sub">SYRAFAST</span></button>
+    <div class="section-label">Produkttyp</div>
+    <div class="type-grid" id="typeGrid">
+      <button class="type-btn active" data-type="plat">🟦<span class="type-sub">PLÅT</span></button>
+      <button class="type-btn" data-type="ror">⭕<span class="type-sub">RÖR</span></button>
+      <button class="type-btn" data-type="plattjarn">▬<span class="type-sub">PLATTJÄRN</span></button>
+      <button class="type-btn" data-type="rundstang">●<span class="type-sub">RUNDSTÅNG</span></button>
+      <button class="type-btn" data-type="vinkeljarn">📐<span class="type-sub">VINKELJÄRN</span></button>
+      <button class="type-btn" data-type="vkr">⬜<span class="type-sub">VKR</span></button>
     </div>
   </div>
 
-  <!-- DIMENSIONER -->
-  <div class="card">
-    <div class="card-title">Dimensioner</div>
-    <div class="dim-row">
-      <div class="input-wrap">
-        <label>Längd mm</label>
-        <input type="number" id="length" inputmode="numeric" placeholder="2000" min="1">
-      </div>
-      <div class="input-wrap">
-        <label>Bredd mm</label>
-        <input type="number" id="width" inputmode="numeric" placeholder="1000" min="1">
-      </div>
-      <div class="input-wrap">
-        <label>Tjocklek mm</label>
-        <input type="number" id="thickness" inputmode="decimal" placeholder="5" min="0.1" step="0.1">
-      </div>
-    </div>
-    <div class="qty-row">
-      <div class="input-wrap">
-        <label>Antal st</label>
-        <input type="number" id="qty" inputmode="numeric" placeholder="1" min="1" value="1">
-      </div>
-      <div class="density-badge">
-        <span class="db-label">Densitet kg/m³</span>
-        <span class="db-value" id="densityVal">7 850</span>
-      </div>
-    </div>
+  <!-- STEG 2: MATERIAL -->
+  <div class="card" id="matCard">
+    <div class="card-title">Material</div>
+    <div class="mat-grid" id="matGrid"></div>
+  </div>
+
+  <!-- STEG 3: DIMENSIONER -->
+  <div class="card" id="dimCard">
+    <div class="card-title" id="dimTitle">Dimensioner</div>
+    <div id="dimFields"></div>
   </div>
 
   <!-- MATERIALPRIS -->
@@ -830,28 +207,22 @@
     </div>
   </div>
 
-  <!-- SKÄRKOSTNAD -->
-  <div class="card">
-    <div class="card-title">Skärkostnad</div>
-
+  <!-- SKÄRNING / SÅGNING -->
+  <div class="card" id="cutCard">
+    <div class="card-title" id="cutCardTitle">Skär/sågkostnad</div>
     <div class="toggle-row" id="cutToggleRow">
       <div class="toggle" id="cutToggle"></div>
       <div>
-        <div class="toggle-label">Inkludera skärkostnad</div>
+        <div class="toggle-label" id="cutToggleLabel">Inkludera skärkostnad</div>
         <div class="toggle-sub" id="cutToggleSub">Ej inkluderat i kg-priset</div>
       </div>
     </div>
-
     <div id="cutBadgeWrap" style="display:none;">
-      <div class="cut-method-badge plasma" id="cutBadge">
-        <span class="cm-dot"></span>
-        <span id="cutMethodText">PLASMA</span>
-      </div>
+      <div class="method-badge plasma" id="cutBadge"><span class="mb-dot"></span><span id="cutMethodText">PLASMA</span></div>
     </div>
-
     <div class="cut-inputs disabled" id="cutInputs">
-      <div class="input-wrap">
-        <label>Skärlängd mm</label>
+      <div class="input-wrap" id="cutLengthWrap">
+        <label id="cutLengthLabel">Skärlängd mm</label>
         <input type="number" id="cutLength" inputmode="numeric" placeholder="Auto (omkrets)">
       </div>
       <div class="input-wrap">
@@ -859,54 +230,35 @@
         <input type="number" id="cutRate" inputmode="decimal" placeholder="45" min="0" step="1" value="45">
       </div>
     </div>
-    <div class="cut-note" id="cutNote">
-      Lämna skärlängd tom → omkrets beräknas automatiskt (2×L + 2×B).<br>
-      Plasma används ≤25 mm, gas används &gt;25 mm stål.
-    </div>
+    <div class="cut-note" id="cutNote">Ange tjocklek → hastighet och kr/m beräknas automatiskt.</div>
   </div>
 
   <!-- OPERATÖR & HANTERING -->
   <div class="card">
     <div class="card-title">Operatör &amp; hantering</div>
-
     <div class="toggle-row" id="labourToggleRow">
       <div class="toggle" id="labourToggle"></div>
-      <div>
-        <div class="toggle-label">Inkludera personalkostnad</div>
-        <div class="toggle-sub">Lön, sociala avgifter och hanteringstid</div>
-      </div>
+      <div><div class="toggle-label">Inkludera personalkostnad</div><div class="toggle-sub">Lön, sociala avgifter och hanteringstid</div></div>
     </div>
-
-    <div id="labourInputs" style="opacity:0.3;pointer-events:none;transition:opacity 0.2s;">
+    <div id="labourInputs" style="opacity:.3;pointer-events:none;transition:opacity .2s;">
       <div class="labour-grid" style="margin-top:14px;">
         <div class="input-wrap">
           <label>Lön + avg. kr / h</label>
           <input type="number" id="labourRate" inputmode="decimal" placeholder="450" min="0" step="10" value="450" disabled>
         </div>
-        <div class="density-badge" id="labourCutPreview">
-          <span class="db-label">Lön under skärning</span>
-          <span class="db-value" id="labourCutVal">— kr</span>
+        <div class="info-badge">
+          <span class="ib-label">Lön under bearbetning</span>
+          <span class="ib-value" id="labourCutVal">— kr</span>
         </div>
       </div>
-
       <div style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:10px;">Hanteringstid</div>
         <div class="labour-time-grid">
-          <div class="input-wrap">
-            <label>Upplägg min/order</label>
-            <input type="number" id="setupTime" inputmode="decimal" placeholder="10" min="0" step="1" value="10" disabled>
-          </div>
-          <div class="input-wrap">
-            <label>CAM/nest min/order</label>
-            <input type="number" id="camTime" inputmode="decimal" placeholder="5" min="0" step="1" value="5" disabled>
-          </div>
-          <div class="input-wrap">
-            <label>Nedlägg+grad min/st</label>
-            <input type="number" id="handleTime" inputmode="decimal" placeholder="3" min="0" step="0.5" value="3" disabled>
-          </div>
+          <div class="input-wrap"><label>Upplägg min/order</label><input type="number" id="setupTime" inputmode="decimal" placeholder="10" min="0" step="1" value="10" disabled></div>
+          <div class="input-wrap"><label>CAM/nest min/order</label><input type="number" id="camTime" inputmode="decimal" placeholder="5" min="0" step="1" value="5" disabled></div>
+          <div class="input-wrap"><label id="handleTimeLabel">Nedlägg+grad min/st</label><input type="number" id="handleTime" inputmode="decimal" placeholder="3" min="0" step=".5" value="3" disabled></div>
         </div>
       </div>
-
       <div style="margin-top:12px;" id="labourBreakdown"></div>
     </div>
   </div>
@@ -914,36 +266,20 @@
   <!-- MARGINAL -->
   <div class="card">
     <div class="card-title">Marginal</div>
-
     <div class="toggle-row" id="marginToggleRow">
       <div class="toggle" id="marginToggle"></div>
-      <div>
-        <div class="toggle-label">Lägg på marginal</div>
-        <div class="toggle-sub">Påslag på totalt inpris (material + skärning)</div>
-      </div>
+      <div><div class="toggle-label">Lägg på marginal</div><div class="toggle-sub">Påslag på totalt inpris</div></div>
     </div>
-
     <div class="margin-row">
-      <div class="input-wrap">
-        <label>Marginal %</label>
-        <input type="number" id="marginPct" inputmode="decimal" placeholder="25" min="0" max="900" step="1" value="25" disabled>
-      </div>
-      <div class="margin-preview">
-        <span class="mp-label">Vinst / st</span>
-        <span class="mp-value" id="marginPreview">— kr</span>
-      </div>
+      <div class="input-wrap"><label>Marginal %</label><input type="number" id="marginPct" inputmode="decimal" placeholder="25" min="0" max="900" step="1" value="25" disabled></div>
+      <div class="info-badge margin-preview"><span class="mp-label">Vinst / st</span><span class="mp-value" id="marginPreview">— kr</span></div>
     </div>
   </div>
 
   <!-- RESULTAT -->
-  <div id="resultArea">
-    <div class="empty-state">
-      <div class="es-icon">⚙</div>
-      Fyll i dimensioner och pris
-    </div>
-  </div>
+  <div id="resultArea"><div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div></div>
 
-  <!-- LÄGG TILL-KNAPP -->
+  <!-- LÄGG TILL I LISTA -->
   <button class="add-btn disabled" id="addToListBtn" onclick="addToList()">
     <span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA
   </button>
@@ -954,110 +290,645 @@
       <div class="quote-header">
         <span class="quote-header-title">Offertlista</span>
         <div style="display:flex;gap:8px;">
-          <button class="quote-clear-btn" id="copyListBtn" onclick="copyList()">⎘ KOPIERA TEXT</button>
+          <button class="quote-clear-btn" id="copyListBtn" onclick="copyList()">⎘ KOPIERA</button>
           <button class="quote-clear-btn" onclick="clearList()">RENSA</button>
         </div>
       </div>
       <div id="quoteRows"></div>
       <div class="quote-footer">
-        <div>
-          <div class="quote-footer-label">Totalt</div>
-          <div class="quote-footer-sub" id="quoteFooterSub"></div>
-        </div>
+        <div><div class="quote-footer-label">Totalt</div><div class="quote-footer-sub" id="quoteFooterSub"></div></div>
         <div style="text-align:right;">
-          <div>
-            <span class="quote-footer-total" id="quoteGrandTotal">0,00</span>
-            <span class="quote-footer-currency">kr</span>
-          </div>
+          <span class="quote-footer-total" id="quoteGrandTotal">0,00</span>
+          <span class="quote-footer-currency">kr</span>
         </div>
       </div>
     </div>
   </div>
 
-
 </main>
-
 <script>
-  const state = {
-    mat: 'S235',
-    density: 7850,
-    cutEnabled: false,
-    marginEnabled: false,
-    cutRateUserEdited: false,
-    labourEnabled: false,
-  };
+// ================================================================
+// KONFIGURATION
+// ================================================================
 
-  const defaultPrices = {
-    S235: 12.5, P265GH: 16.0, S355: 14.0,
-    ALU: 38.0, '304': 55.0, '316L': 75.0
-  };
+// Material per produkttyp: { key, label, density, defaultPrice, sub }
+const MATERIALS = {
+  plat: [
+    {key:'S235',  label:'S235',   density:7850, price:12.5, sub:'KONSTRUKTIONS'},
+    {key:'P265GH',label:'P265GH', density:7850, price:16.0, sub:'TRYCKKÄRL'},
+    {key:'S355',  label:'S355',   density:7850, price:14.0, sub:'KONSTRUKTIONS'},
+    {key:'ALU',   label:'ALU',    density:2700, price:38.0, sub:'ALUMINIUM'},
+    {key:'304',   label:'304',    density:7900, price:55.0, sub:'ROSTFRITT'},
+    {key:'316L',  label:'316L',   density:7980, price:75.0, sub:'SYRAFAST'},
+  ],
+  ror: [
+    {key:'S235',  label:'S235',   density:7850, price:14.0, sub:'KONSTRUKTIONS'},
+    {key:'S355',  label:'S355',   density:7850, price:16.0, sub:'KONSTRUKTIONS'},
+    {key:'ALU',   label:'ALU',    density:2700, price:42.0, sub:'ALUMINIUM'},
+    {key:'304',   label:'304',    density:7900, price:60.0, sub:'ROSTFRITT'},
+    {key:'316L',  label:'316L',   density:7980, price:82.0, sub:'SYRAFAST'},
+  ],
+  plattjarn: [
+    {key:'S235',  label:'S235',   density:7850, price:13.0, sub:'KONSTRUKTIONS'},
+    {key:'S355',  label:'S355',   density:7850, price:15.0, sub:'KONSTRUKTIONS'},
+    {key:'ALU',   label:'ALU',    density:2700, price:40.0, sub:'ALUMINIUM'},
+    {key:'304',   label:'304',    density:7900, price:58.0, sub:'ROSTFRITT'},
+  ],
+  rundstang: [
+    {key:'SS1650', label:'SS 1650', density:7850, price:14.0, sub:'S235-NIVÅ'},
+    {key:'SS2140', label:'SS 2140', density:7850, price:16.0, sub:'S355-NIVÅ'},
+    {key:'SS2142', label:'SS 2142', density:7850, price:19.0, sub:'SEGHÄRDAT'},
+    {key:'ALU',    label:'ALU',     density:2700, price:42.0, sub:'ALUMINIUM'},
+    {key:'304',    label:'304',     density:7900, price:62.0, sub:'ROSTFRITT'},
+    {key:'316L',   label:'316L',    density:7980, price:85.0, sub:'SYRAFAST'},
+  ],
+  vinkeljarn: [
+    {key:'S235',  label:'S235',   density:7850, price:14.0, sub:'KONSTRUKTIONS'},
+    {key:'S355',  label:'S355',   density:7850, price:16.5, sub:'KONSTRUKTIONS'},
+    {key:'304',   label:'304',    density:7900, price:65.0, sub:'ROSTFRITT'},
+  ],
+  vkr: [
+    {key:'S235',  label:'S235',   density:7850, price:14.5, sub:'KONSTRUKTIONS'},
+    {key:'S355',  label:'S355',   density:7850, price:16.5, sub:'KONSTRUKTIONS'},
+    {key:'ALU',   label:'ALU',    density:2700, price:45.0, sub:'ALUMINIUM'},
+    {key:'304',   label:'304',    density:7900, price:62.0, sub:'ROSTFRITT'},
+  ],
+};
 
-  // ---- SKÄRHASTIGHETER (mm/min) per material och tjocklek ----
-  // Maskinkostnad kr/min inkl. gas/el/förbrukningsdelar
-  const MACHINE_COST = { plasma: 4.5, gas: 3.5 };
 
-  // Plasma: hastighet mm/min för kolstål. Justeras per material nedan.
-  const PLASMA_SPD = [
-    { t:  3, s: 5000 }, { t:  5, s: 3800 }, { t:  8, s: 2800 },
-    { t: 10, s: 2200 }, { t: 12, s: 1800 }, { t: 15, s: 1400 },
-    { t: 20, s: 1000 }, { t: 25, s:  700 }, { t: 999,s:  400 },
-  ];
+// Ytfinish för rundstång — prismultiplikator på kg-priset
+const RUNDSTANG_FINISH = [
+  {key:'ra',     label:'Rå',     sub:'VARMVALSAD', mult:1.00},
+  {key:'dragen', label:'Dragen', sub:'H9/H11',     mult:1.22},
+  {key:'slipad', label:'Slipad', sub:'H6/H7',      mult:1.55},
+];
 
-  // Gas (oxyfuel): kolstål/tryckkärlsstål. Ej alu/rostfritt.
-  const GAS_SPD = [
-    { t: 20, s:  800 }, { t: 25, s:  650 }, { t: 30, s:  550 },
-    { t: 40, s:  420 }, { t: 50, s:  320 }, { t: 60, s:  250 },
-    { t: 80, s:  190 }, { t:100, s:  150 }, { t:999, s:  110 },
-  ];
+// Dimensionsfältsdefinitioner per produkttyp
+// type: number|select, id, label, placeholder, unit
+const DIM_FIELDS = {
+  plat: [
+    {id:'f_length',  label:'Längd mm',    ph:'2000'},
+    {id:'f_width',   label:'Bredd mm',    ph:'1000'},
+    {id:'f_thick',   label:'Tjocklek mm', ph:'5', step:'0.1'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+  ror: [
+    {id:'f_od',      label:'Ytterdia mm', ph:'60.3'},
+    {id:'f_wt',      label:'Godstjocklek mm', ph:'4', step:'0.1'},
+    {id:'f_length',  label:'Längd mm',    ph:'1000'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+  plattjarn: [
+    {id:'f_width',   label:'Bredd mm',    ph:'50'},
+    {id:'f_thick',   label:'Tjocklek mm', ph:'10'},
+    {id:'f_length',  label:'Längd mm',    ph:'3000'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+  rundstang: [
+    {id:'f_dia',     label:'Diameter mm', ph:'30'},
+    {id:'f_length',  label:'Längd mm',    ph:'3000'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+  vinkeljarn: [
+    {id:'f_a',       label:'Ben A mm',    ph:'50'},
+    {id:'f_b',       label:'Ben B mm',    ph:'50'},
+    {id:'f_thick',   label:'Godstjocklek mm', ph:'5'},
+    {id:'f_length',  label:'Längd mm',    ph:'3000'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+  vkr: [
+    {id:'f_w',       label:'Bredd mm',    ph:'60'},
+    {id:'f_h',       label:'Höjd mm',     ph:'40'},
+    {id:'f_thick',   label:'Godstjocklek mm', ph:'4', step:'0.5'},
+    {id:'f_length',  label:'Längd mm',    ph:'3000'},
+    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+  ],
+};
 
-  function lookupSpd(T, tbl) {
-    for (const r of tbl) { if (T <= r.t) return r.s; }
-    return tbl[tbl.length-1].s;
+// Skärhastigheter
+const MACHINE_COST = {plasma:4.5, gas:3.5};
+const PLASMA_SPD = [{t:3,s:5000},{t:5,s:3800},{t:8,s:2800},{t:10,s:2200},{t:12,s:1800},{t:15,s:1400},{t:20,s:1000},{t:25,s:700},{t:999,s:400}];
+const GAS_SPD    = [{t:20,s:800},{t:25,s:650},{t:30,s:550},{t:40,s:420},{t:50,s:320},{t:60,s:250},{t:80,s:190},{t:100,s:150},{t:999,s:110}];
+function lookupSpd(T,tbl){for(const r of tbl){if(T<=r.t)return r.s;}return tbl[tbl.length-1].s;}
+function calcCutRate(mat,T){
+  const useGas=T>25&&mat!=='ALU';
+  if(useGas){return(1000/lookupSpd(T,GAS_SPD))*MACHINE_COST.gas;}
+  let s=lookupSpd(T,PLASMA_SPD);
+  if(mat==='ALU')s*=1.15;if(mat==='304')s*=0.75;if(mat==='316L')s*=0.70;if(mat==='P265GH')s*=0.92;
+  return(1000/s)*MACHINE_COST.plasma;
+}
+
+const PRICE_SOURCES = {
+  ALU: {url:'https://metals.live',label:'LME Aluminium spot · metals.live'},
+  '304':{url:'https://metals.live',label:'LME Nickel spot ×3.5 · metals.live'},
+  '316L':{url:'https://metals.live',label:'LME Nickel spot ×4.2 · metals.live'},
+};
+
+// ================================================================
+// STATE
+// ================================================================
+const state = {
+  type: 'plat',
+  mat: 'S235',
+  density: 7850,
+  cutEnabled: false,
+  cutRateUserEdited: false,
+  rundstangFinish: 'ra',
+  labourEnabled: false,
+  marginEnabled: false,
+  usdSek: 10.5,
+};
+
+// ================================================================
+// INIT
+// ================================================================
+function init() {
+  renderTypeGrid();
+  switchType('plat');
+  setupToggles();
+  setupInputListeners();
+  applyTheme();
+}
+
+// ================================================================
+// PRODUKTTYP
+// ================================================================
+function renderTypeGrid() {
+  document.getElementById('typeGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.type-btn');
+    if (!btn) return;
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    switchType(btn.dataset.type);
+  });
+}
+
+function switchType(type) {
+  state.type = type;
+  state.cutRateUserEdited = false;
+  if (type !== 'rundstang') state.rundstangFinish = 'ra';
+
+  // Materialval
+  renderMatGrid(type);
+
+  // Dimensionsfält
+  renderDimFields(type);
+
+  // Skärkortet: plåt = brännning, resten = sågning
+  const isPlat = type === 'plat';
+  document.getElementById('cutCardTitle').textContent = isPlat ? 'Skärkostnad' : 'Sågkostnad';
+  document.getElementById('cutToggleLabel').textContent = isPlat ? 'Inkludera skärkostnad' : 'Inkludera sågkostnad';
+  document.getElementById('cutLengthWrap').style.display = isPlat ? '' : 'none';
+
+  // Hantering-label
+  document.getElementById('handleTimeLabel').textContent = isPlat ? 'Nedlägg+grad min/st' : 'Nedlägg+burr min/st';
+
+  // Reset cut toggle
+  state.cutEnabled = false;
+  document.getElementById('cutToggle').classList.remove('on');
+  document.getElementById('cutInputs').classList.add('disabled');
+  document.getElementById('cutBadgeWrap').style.display = 'none';
+  document.getElementById('cutToggleSub').textContent = isPlat ? 'Ej inkluderat i kg-priset' : 'Ej inkluderat i kg-priset';
+
+  syncCutMethod();
+  calculate();
+}
+
+// ================================================================
+// MATERIAL
+// ================================================================
+function renderMatGrid(type) {
+  const mats = MATERIALS[type];
+  const grid = document.getElementById('matGrid');
+  const cols = mats.length <= 3 ? mats.length : mats.length <= 4 ? 2 : mats.length <= 6 ? 3 : 3;
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.innerHTML = mats.map((m,i) =>
+    `<button class="mat-btn${i===0?' active':''}" data-mat="${m.key}" data-density="${m.density}" data-price="${m.price}">
+      ${m.label}<span class="mat-sub">${m.sub}</span>
+    </button>`
+  ).join('');
+
+  // Set first as active
+  const first = mats[0];
+  state.mat = first.key;
+  state.density = first.density;
+  document.getElementById('kgprice').value = '';
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.mat-btn');
+    if (!btn) return;
+    grid.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mat = btn.dataset.mat;
+    state.density = parseInt(btn.dataset.density);
+    state.cutRateUserEdited = false;
+    syncCutMethod();
+    renderFinishSelector(type);
+    calculate();
+  });
+
+  renderFinishSelector(type);
+}
+
+function renderFinishSelector(type) {
+  // Remove any existing finish selector
+  const old = document.getElementById('finishSelectorWrap');
+  if (old) old.remove();
+
+  if (type !== 'rundstang') return;
+
+  const matCard = document.getElementById('matCard');
+  const wrap = document.createElement('div');
+  wrap.id = 'finishSelectorWrap';
+  wrap.style.marginTop = '12px';
+  wrap.innerHTML = '<div class="section-label" style="margin-bottom:8px;">Ytfinish</div>' +
+    '<div class="mat-grid" style="grid-template-columns:repeat(3,1fr);" id="finishGrid">' +
+    RUNDSTANG_FINISH.map((f,i) =>
+      `<button class="mat-btn${i===0&&state.rundstangFinish===f.key?' active':state.rundstangFinish===f.key?' active':''}"
+        data-finish="${f.key}" data-mult="${f.mult}">
+        ${f.label}<span class="mat-sub">${f.sub}</span>
+      </button>`
+    ).join('') +
+    '</div>';
+  matCard.appendChild(wrap);
+
+  document.getElementById('finishGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.mat-btn');
+    if (!btn) return;
+    document.querySelectorAll('#finishGrid .mat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.rundstangFinish = btn.dataset.finish;
+    calculate();
+  });
+}
+
+// ================================================================
+// DIMENSIONSFÄLT
+// ================================================================
+function renderDimFields(type) {
+  const fields = DIM_FIELDS[type];
+  const wrap = document.getElementById('dimFields');
+  const n = fields.length;
+  const cols = n === 3 ? 'dim-3' : n === 4 ? 'dim-4' : n === 2 ? 'dim-2' : 'dim-3';
+  // For 5 fields: two rows
+  let html = '';
+  if (n === 5) {
+    html = `<div class="dim-row dim-3">${fields.slice(0,3).map(f=>fieldHtml(f)).join('')}</div>
+            <div class="dim-row dim-2" style="margin-top:10px;">${fields.slice(3).map(f=>fieldHtml(f)).join('')}</div>`;
+  } else {
+    html = `<div class="dim-row ${cols}">${fields.map(f=>fieldHtml(f)).join('')}</div>`;
+  }
+  wrap.innerHTML = html;
+
+  // Attach input listeners
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) el.addEventListener('input', () => { syncCutMethod(); calculate(); });
+  });
+}
+
+function fieldHtml(f) {
+  return `<div class="input-wrap">
+    <label>${f.label}</label>
+    <input type="number" id="${f.id}" inputmode="decimal" placeholder="${f.ph}"
+      min="${f.min||0}" step="${f.step||1}" ${f.val?`value="${f.val}"`:''}
+    >
+  </div>`;
+}
+
+// Hämta dimensionsvärden beroende på produkttyp
+function getDims() {
+  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const gi = id => Math.max(1, parseInt(document.getElementById(id)?.value) || 1);
+  const t = state.type;
+  if (t === 'plat')       return {L:g('f_length'),W:g('f_width'),T:g('f_thick'),QTY:gi('f_qty')};
+  if (t === 'ror')        return {OD:g('f_od'),WT:g('f_wt'),L:g('f_length'),QTY:gi('f_qty')};
+  if (t === 'plattjarn')  return {W:g('f_width'),T:g('f_thick'),L:g('f_length'),QTY:gi('f_qty')};
+  if (t === 'rundstang')  return {D:g('f_dia'),L:g('f_length'),QTY:gi('f_qty')};
+  if (t === 'vinkeljarn') return {A:g('f_a'),B:g('f_b'),T:g('f_thick'),L:g('f_length'),QTY:gi('f_qty')};
+  if (t === 'vkr')        return {W:g('f_w'),H:g('f_h'),T:g('f_thick'),L:g('f_length'),QTY:gi('f_qty')};
+  return {};
+}
+
+// Volym per styck i m³
+function calcVolume(d) {
+  const t = state.type;
+  const mm3_to_m3 = 1e-9;
+  if (t === 'plat')       return d.L * d.W * d.T * mm3_to_m3;
+  if (t === 'ror')        { const ri=d.OD/2-d.WT, ro=d.OD/2; return Math.PI*(ro*ro-ri*ri)*d.L*mm3_to_m3; }
+  if (t === 'plattjarn')  return d.W * d.T * d.L * mm3_to_m3;
+  if (t === 'rundstang')  return Math.PI*(d.D/2)*(d.D/2)*d.L*mm3_to_m3;
+  if (t === 'vinkeljarn') return ((d.A + d.B - d.T) * d.T) * d.L * mm3_to_m3;
+  if (t === 'vkr')        return (2*(d.W+d.H-2*d.T)*d.T) * d.L * mm3_to_m3;
+  return 0;
+}
+
+// Är alla nödvändiga fält ifyllda?
+function dimsValid(d) {
+  const t = state.type;
+  if (t === 'plat')       return d.L>0 && d.W>0 && d.T>0;
+  if (t === 'ror')        return d.OD>0 && d.WT>0 && d.L>0 && d.WT < d.OD/2;
+  if (t === 'plattjarn')  return d.W>0 && d.T>0 && d.L>0;
+  if (t === 'rundstang')  return d.D>0 && d.L>0;
+  if (t === 'vinkeljarn') return d.A>0 && d.B>0 && d.T>0 && d.L>0;
+  if (t === 'vkr')        return d.W>0 && d.H>0 && d.T>0 && d.L>0;
+  return false;
+}
+
+// Skärlängd för plåt (omkrets)
+function getPerimeter(d) {
+  if (state.type === 'plat') return 2*(d.L + d.W);
+  return 0;
+}
+
+// Tjocklek för skärhastighetstabell
+function getThickness(d) {
+  if (state.type === 'plat')       return d.T;
+  if (state.type === 'ror')        return d.WT;
+  if (state.type === 'plattjarn')  return d.T;
+  if (state.type === 'vinkeljarn') return d.T;
+  if (state.type === 'vkr')        return d.T;
+  if (state.type === 'rundstang')  return d.D;
+  return 0;
+}
+
+// Dimensionssträng för visning
+function dimString(d) {
+  const t = state.type;
+  if (t === 'plat')       return `${d.L}×${d.W}×${d.T} mm`;
+  if (t === 'ror')        return `Ø${d.OD}×${d.WT} · ${d.L} mm`;
+  if (t === 'plattjarn')  return `${d.W}×${d.T} · ${d.L} mm`;
+  if (t === 'rundstang')  {
+    const fin = RUNDSTANG_FINISH.find(f=>f.key===state.rundstangFinish);
+    return `Ø${d.D} × ${d.L} mm`;
+  }
+  if (t === 'vinkeljarn') return `${d.A}×${d.B}×${d.T} · ${d.L} mm`;
+  if (t === 'vkr')        return `${d.W}×${d.H}×${d.T} · ${d.L} mm`;
+  return '';
+}
+
+// ================================================================
+// SKÄR/SÅG-METOD
+// ================================================================
+function isGasMethod(T) { return state.type==='plat' && T>25 && state.mat!=='ALU'; }
+
+function syncCutMethod() {
+  const d = getDims();
+  const T = getThickness(d);
+  const isPlat = state.type === 'plat';
+  const badge  = document.getElementById('cutBadge');
+  const methodText = document.getElementById('cutMethodText');
+  const rateLabel  = document.getElementById('cutRateLabel');
+  const rateInput  = document.getElementById('cutRate');
+  const cutNote    = document.getElementById('cutNote');
+
+  if (!isPlat) {
+    // Sågning
+    badge.className = 'method-badge saw';
+    methodText.textContent = 'SÅG';
+    rateLabel.textContent  = 'Pris kr / snitt';
+    document.getElementById('cutLengthWrap').style.display = 'none';
+    if (!state.cutRateUserEdited) rateInput.value = '25';
+    cutNote.textContent = 'Fast kostnad per snitt. Kapar med såg.';
+    return;
   }
 
-  function calcCutRate(mat, T) {
-    // Returnerar kr/m baserat på maskinkostnad och skärhastighet
-    const useGas = T > 25 && mat !== 'ALU';
-    if (useGas) {
-      const spd = lookupSpd(T, GAS_SPD);
-      return (1000 / spd) * MACHINE_COST.gas;
+  // Plåt — brännning
+  document.getElementById('cutLengthWrap').style.display = '';
+  const gas = isGasMethod(T);
+  if (gas) {
+    badge.className = 'method-badge gas';
+    methodText.textContent = 'GAS  (> 25 mm)';
+    rateLabel.textContent  = 'Gaspris kr / m';
+  } else {
+    badge.className = 'method-badge plasma';
+    const ml = state.mat==='ALU'?'ALU':state.mat==='304'?'ROSTFRITT':state.mat==='316L'?'SYRAFAST':state.mat==='P265GH'?'TRYCKKÄRL':'≤ 25 mm';
+    methodText.textContent = `PLASMA  (${ml})`;
+    rateLabel.textContent  = 'Plasmapris kr / m';
+  }
+
+  if (!state.cutRateUserEdited && T > 0) {
+    const autoRate = calcCutRate(state.mat, T);
+    rateInput.value = autoRate.toFixed(1);
+    const tbl = gas ? GAS_SPD : PLASMA_SPD;
+    let spd = lookupSpd(T, tbl);
+    if (!gas) {
+      if(state.mat==='ALU')spd*=1.15;if(state.mat==='304')spd*=0.75;
+      if(state.mat==='316L')spd*=0.70;if(state.mat==='P265GH')spd*=0.92;
+    }
+    cutNote.innerHTML = `Auto: ~${Math.round(spd/10)*10} mm/min · ${(gas?MACHINE_COST.gas:MACHINE_COST.plasma).toFixed(1)} kr/min<br>Skärlängd tom = omkrets. Ändra kr/m för eget pris.`;
+  } else if (T === 0) {
+    cutNote.textContent = 'Ange tjocklek → hastighet beräknas automatiskt.';
+  }
+}
+
+// ================================================================
+// BERÄKNING
+// ================================================================
+
+function displayTitle(d) {
+  if (state.type === 'rundstang') {
+    const fin = RUNDSTANG_FINISH.find(f=>f.key===state.rundstangFinish);
+    const matLabel = (MATERIALS.rundstang.find(m=>m.key===state.mat)||{label:state.mat}).label;
+    return `${matLabel} / ${fin?fin.label.toLowerCase():'rå'} / Ø${d.D} × ${d.L} mm`;
+  }
+  return `${state.mat} — ${dimString(d)}`;
+}
+
+function calculate() {
+  const d   = getDims();
+  const P_base = parseFloat(document.getElementById('kgprice').value) || 0;
+  const finishMult = (state.type === 'rundstang')
+    ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
+    : 1.0;
+  const P = P_base * finishMult;
+  const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
+  const QTY = d.QTY || 1;
+  const area = document.getElementById('resultArea');
+  const fmt  = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  if (!dimsValid(d) || !P) {
+    area.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
+    document.getElementById('addToListBtn').classList.add('disabled');
+    document.getElementById('marginPreview').textContent = '— kr';
+    document.getElementById('labourCutVal').textContent  = '— kr';
+    document.getElementById('labourBreakdown').innerHTML = '';
+    return;
+  }
+
+  // Vikt
+  const volM3    = calcVolume(d);
+  const weightKg = volM3 * state.density;
+  const matCost  = weightKg * P;
+
+  // Skärning / sågning
+  let cutCost=0, cutLenM=0, cutMethod='', sawSnitt=0;
+  const isPlat = state.type === 'plat';
+  if (state.cutEnabled) {
+    if (isPlat) {
+      const customLen = parseFloat(document.getElementById('cutLength').value);
+      cutLenM = (customLen > 0 ? customLen : getPerimeter(d)) / 1000;
+      const rate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d));
+      cutCost  = cutLenM * rate;
+      cutMethod = isGasMethod(getThickness(d)) ? 'Gas' : 'Plasma';
     } else {
-      let spd = lookupSpd(T, PLASMA_SPD);
-      if (mat === 'ALU')    spd *= 1.15;  // alu skärs ~15% snabbare
-      if (mat === '304')    spd *= 0.75;  // rostfritt ~25% långsammare
-      if (mat === '316L')   spd *= 0.70;  // syrafast ännu lite långsammare
-      if (mat === 'P265GH') spd *= 0.92;  // tryckkärlsstål något segare
-      return (1000 / spd) * MACHINE_COST.plasma;
+      const rate = parseFloat(document.getElementById('cutRate').value) || 25;
+      sawSnitt = QTY; // ett snitt per detalj
+      cutCost  = sawSnitt * rate;
+      cutMethod = 'Såg';
     }
   }
 
-  // Käll-URL för prisinformation
-  const PRICE_SOURCES = {
-    ALU:  { url: 'https://metals.live', label: 'LME Aluminium spot · metals.live' },
-    '304':{ url: 'https://metals.live', label: 'LME Nickel spot × 3.5 · metals.live' },
-    '316L':{ url: 'https://metals.live', label: 'LME Nickel spot × 4.2 · metals.live' },
-  };
+  // Personal
+  let labourCost=0, labourCutCost=0, labourSetupCost=0, labourHandleCost=0, cutTimeMin=0;
+  if (state.labourEnabled) {
+    const lrh  = parseFloat(document.getElementById('labourRate').value) || 450;
+    const setup= parseFloat(document.getElementById('setupTime').value)  || 0;
+    const cam  = parseFloat(document.getElementById('camTime').value)    || 0;
+    const hand = parseFloat(document.getElementById('handleTime').value) || 0;
+    const lpm  = lrh / 60;
+    if (state.cutEnabled) {
+      if (isPlat && cutLenM > 0) {
+        const T2 = getThickness(d);
+        const useGas = isGasMethod(T2);
+        const tbl = useGas ? GAS_SPD : PLASMA_SPD;
+        let spd = lookupSpd(T2, tbl);
+        if(!useGas){if(state.mat==='ALU')spd*=1.15;if(state.mat==='304')spd*=0.75;if(state.mat==='316L')spd*=0.70;if(state.mat==='P265GH')spd*=0.92;}
+        cutTimeMin = (cutLenM*1000)/spd;
+        labourCutCost = cutTimeMin * lpm * QTY;
+      } else if (!isPlat) {
+        // Sågning: uppskatta 2 min/snitt operatörstid
+        cutTimeMin = 2;
+        labourCutCost = cutTimeMin * lpm * QTY;
+      }
+    }
+    labourSetupCost  = (setup + cam) * lpm;
+    labourHandleCost = hand * lpm * QTY;
+    labourCost = labourCutCost + labourSetupCost + labourHandleCost;
 
-  // ---- TOGGLES ----
+    document.getElementById('labourCutVal').textContent =
+      (state.cutEnabled && (cutTimeMin>0))
+        ? `${fmt(labourCutCost)} kr (${(cutTimeMin*QTY).toFixed(1)} min)`
+        : '— kr';
+
+    document.getElementById('labourBreakdown').innerHTML =
+      `<div class="info-row"><span>Bearbetningstid (lön)</span><span>${fmt(labourCutCost)} kr</span></div>` +
+      `<div class="info-row"><span>Upplägg + CAM (${(setup+cam).toFixed(0)} min)</span><span>${fmt(labourSetupCost)} kr</span></div>` +
+      `<div class="info-row"><span>Nedlägg + gradning (${hand} min × ${QTY} st)</span><span>${fmt(labourHandleCost)} kr</span></div>`;
+  } else {
+    document.getElementById('labourCutVal').textContent = '— kr';
+    document.getElementById('labourBreakdown').innerHTML = '';
+  }
+
+  const inCost = matCost + cutCost + labourCost;
+  let marginCost = 0;
+  if (state.marginEnabled && MRG > 0) marginCost = inCost * (MRG/100);
+  document.getElementById('marginPreview').textContent = (state.marginEnabled && MRG>0) ? `${fmt(marginCost)} kr` : '— kr';
+
+  const sellEach  = inCost + marginCost;
+  const sellTotal = sellEach; // inCost already includes all QTY costs except matCost/st
+
+  // Faktiska per-st priser (inCost innehåller QTY-multipel för cut/labour men ej matCost)
+  // Räkna om: matCost är per ST, cut och labour är per ORDER (inkl QTY multiplar)
+  // Enklare: sellTotal = sellEach redan är per order
+  const sellPerSt = sellEach / QTY;
+
+  // ---- BYGG RESULTATRADER ----
+  function row(label, value, cls, tip) {
+    const ta = tip ? ` class="tt" data-tip="${tip.replace(/"/g,'&quot;')}"` : '';
+    return `<div class="result-row"${ta}><span class="result-label">${label}</span><span class="result-value${cls?' '+cls:''}">${value}</span></div>`;
+  }
+
+  let rows = '';
+
+  // Vikt
+  const tipVikt = `${dimString(d)}\nVolym: ${(volM3*1e6).toFixed(2)} cm³/st\n× ${state.density.toLocaleString('sv-SE')} kg/m³\n= ${fmt(weightKg)} kg/st`;
+  rows += row('Vikt / st', `${fmt(weightKg)} kg`, '', tipVikt);
+  rows += row('Material / st', `${fmt(matCost)} kr`, '', `${fmt(weightKg)} kg × ${fmt(P)} kr/kg\n= ${fmt(matCost)} kr`);
+
+  if (state.cutEnabled) {
+    if (isPlat) {
+      const rate2 = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat,getThickness(d));
+      rows += row(`${cutMethod} ${fmt(cutLenM)} m`, `${fmt(cutCost)} kr`, 'cut',
+        `${fmt(cutLenM)} m × ${fmt(rate2)} kr/m\n= ${fmt(cutCost)} kr`);
+    } else {
+      const rate2 = parseFloat(document.getElementById('cutRate').value) || 25;
+      rows += row(`Såg ${QTY} snitt`, `${fmt(cutCost)} kr`, 'saw-v',
+        `${QTY} st × ${fmt(rate2)} kr/snitt\n= ${fmt(cutCost)} kr`);
+    }
+  }
+
+  if (state.labourEnabled && labourCost > 0) {
+    rows += '<div class="result-divider"></div>';
+    const lrh2 = parseFloat(document.getElementById('labourRate').value)||450;
+    const lpm2 = lrh2/60;
+    if (state.cutEnabled && labourCutCost>0)
+      rows += row('Lön bearbetning', `${fmt(labourCutCost)} kr`, 'labour',
+        `${cutTimeMin.toFixed(2)} min/st × ${QTY} st\n× ${lpm2.toFixed(2)} kr/min (${lrh2} kr/h)\n= ${fmt(labourCutCost)} kr`);
+    const sm2 = parseFloat(document.getElementById('setupTime').value)||0;
+    const cm2 = parseFloat(document.getElementById('camTime').value)||0;
+    const hm2 = parseFloat(document.getElementById('handleTime').value)||0;
+    rows += row('Upplägg + CAM', `${fmt(labourSetupCost)} kr`, 'labour',
+      `${(sm2+cm2).toFixed(0)} min × ${lpm2.toFixed(2)} kr/min\n= ${fmt(labourSetupCost)} kr`);
+    rows += row('Nedlägg + gradning', `${fmt(labourHandleCost)} kr`, 'labour',
+      `${hm2} min × ${QTY} st × ${lpm2.toFixed(2)} kr/min\n= ${fmt(labourHandleCost)} kr`);
+    rows += row('Personal totalt', `${fmt(labourCost)} kr`, 'labour',
+      `${fmt(labourCutCost)} + ${fmt(labourSetupCost)} + ${fmt(labourHandleCost)}\n= ${fmt(labourCost)} kr`);
+  }
+
+  if (state.cutEnabled || state.labourEnabled) {
+    rows += '<div class="result-divider"></div>';
+    rows += row('Inpris / st', `${fmt(inCost/QTY)} kr`, '',
+      `(Material + Skär/Såg + Personal) ÷ ${QTY} st\n= ${fmt(inCost/QTY)} kr/st`);
+    if (QTY>1) rows += row('Inpris / order', `${fmt(inCost)} kr`, '', `${fmt(inCost/QTY)} kr × ${QTY} st\n= ${fmt(inCost)} kr`);
+  }
+
+  if (state.marginEnabled && MRG>0) {
+    rows += '<div class="result-divider"></div>';
+    rows += row(`Marginal ${MRG}%`, `+ ${fmt(marginCost)} kr`, 'margin-val', `${fmt(inCost)} kr × ${MRG}%\n= ${fmt(marginCost)} kr`);
+    rows += row('Försäljningspris / st', `${fmt(sellPerSt)} kr`, 'sell', `${fmt(inCost/QTY)} + ${fmt(marginCost/QTY)}\n= ${fmt(sellPerSt)} kr/st`);
+  }
+
+  if (QTY>1) rows += row('Antal · tot vikt', `${QTY} st · ${fmt(weightKg*QTY)} kg`, '',
+    `${QTY} st × ${fmt(weightKg)} kg = ${fmt(weightKg*QTY)} kg`);
+
+  const totalLabel = (state.marginEnabled&&MRG>0) ? (QTY>1?'FÖRSÄLJNING TOT':'FÖRSÄLJNINGSPRIS') : (QTY>1?'TOTALT':'PRIS');
+
+  area.innerHTML = `<div class="result-card">
+    <div class="card-title" style="margin-bottom:12px;">${state.mat} — ${dimString(d)}</div>
+    ${rows}
+    <div class="result-total">
+      <span class="rt-label">${totalLabel}</span>
+      <span class="rt-price">${fmt(sellEach)}<span class="rt-currency">kr</span></span>
+    </div>
+  </div>`;
+
+  document.getElementById('addToListBtn').classList.remove('disabled');
+}
+
+// ================================================================
+// TOGGLES
+// ================================================================
+function setupToggles() {
   document.getElementById('cutToggleRow').addEventListener('click', () => {
     state.cutEnabled = !state.cutEnabled;
     document.getElementById('cutToggle').classList.toggle('on', state.cutEnabled);
     document.getElementById('cutInputs').classList.toggle('disabled', !state.cutEnabled);
     document.getElementById('cutBadgeWrap').style.display = state.cutEnabled ? 'block' : 'none';
+    const isPlat = state.type === 'plat';
     document.getElementById('cutToggleSub').textContent = state.cutEnabled
-      ? 'Beräknas separat och läggs på'
+      ? (isPlat ? 'Beräknas från skärlängd och hastighet' : 'Fast kostnad per snitt')
       : 'Ej inkluderat i kg-priset';
-    if (state.cutEnabled) syncCutMethod();
+    syncCutMethod();
     calculate();
   });
-
 
   document.getElementById('labourToggleRow').addEventListener('click', () => {
     state.labourEnabled = !state.labourEnabled;
     document.getElementById('labourToggle').classList.toggle('on', state.labourEnabled);
-    const inputs = document.getElementById('labourInputs');
-    inputs.style.opacity = state.labourEnabled ? '1' : '0.3';
-    inputs.style.pointerEvents = state.labourEnabled ? 'auto' : 'none';
+    const li = document.getElementById('labourInputs');
+    li.style.opacity = state.labourEnabled ? '1' : '0.3';
+    li.style.pointerEvents = state.labourEnabled ? 'auto' : 'none';
     ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
       document.getElementById(id).disabled = !state.labourEnabled;
     });
@@ -1070,515 +941,202 @@
     document.getElementById('marginPct').disabled = !state.marginEnabled;
     calculate();
   });
+}
 
-  // ---- MATERIAL ----
-  document.getElementById('matGrid').addEventListener('click', e => {
-    const btn = e.target.closest('.mat-btn');
-    if (!btn) return;
-    document.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.mat = btn.dataset.mat;
-    state.density = parseInt(btn.dataset.density);
-    document.getElementById('densityVal').textContent = state.density.toLocaleString('sv-SE');
-    state.cutRateUserEdited = false; // reset when material changes
-    syncCutMethod();
-    calculate();
+// ================================================================
+// INPUTS
+// ================================================================
+function setupInputListeners() {
+  ['kgprice','cutRate','labourRate','setupTime','camTime','handleTime','marginPct'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calculate);
   });
+  document.getElementById('cutRate').addEventListener('input', () => { state.cutRateUserEdited = true; });
+}
 
-  // ---- INPUTS ----
-  ['length','width','thickness','kgprice','qty','cutLength','marginPct','labourRate','setupTime','camTime','handleTime'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => { syncCutMethod(); calculate(); });
-  });
+// ================================================================
+// OFFERTLISTA
+// ================================================================
+const quoteList = [];
 
-  document.getElementById('cutRate').addEventListener('input', () => {
-    state.cutRateUserEdited = true;
-    calculate();
-  });
+function addToList() {
+  const d   = getDims();
+  const P_base = parseFloat(document.getElementById('kgprice').value) || 0;
+  const finishMult = (state.type === 'rundstang')
+    ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
+    : 1.0;
+  const P = P_base * finishMult;
+  if (!dimsValid(d) || !P) return;
+  const QTY = d.QTY || 1;
 
-  document.getElementById('thickness').addEventListener('input', () => {
-    state.cutRateUserEdited = false; // auto-update rate when thickness changes
-    syncCutMethod();
-    calculate();
-  });
+  const volM3 = calcVolume(d);
+  const weightKg = volM3 * state.density;
+  const matCost = weightKg * P;
 
-  function isGasMethod() {
-    const T = parseFloat(document.getElementById('thickness').value) || 0;
-    return T > 25 && state.mat !== 'ALU';
-  }
-
-  function syncCutMethod() {
-    const T   = parseFloat(document.getElementById('thickness').value) || 0;
-    const gas = isGasMethod();
-    const badge      = document.getElementById('cutBadge');
-    const methodText = document.getElementById('cutMethodText');
-    const rateLabel  = document.getElementById('cutRateLabel');
-    const rateInput  = document.getElementById('cutRate');
-    const cutNote    = document.getElementById('cutNote');
-
-    if (gas) {
-      badge.className = 'cut-method-badge gas';
-      methodText.textContent = 'GAS  (> 25 mm)';
-      rateLabel.textContent = 'Gaspris kr / m';
-    } else {
-      badge.className = 'cut-method-badge plasma';
-      const matLabel = state.mat === 'ALU' ? 'ALU'
-                     : state.mat === '304' ? 'ROSTFRITT'
-                     : state.mat === '316L' ? 'SYRAFAST'
-                     : state.mat === 'P265GH' ? 'TRYCKKÄRL' : '≤ 25 mm';
-      methodText.textContent = 'PLASMA  (' + matLabel + ')';
-      rateLabel.textContent = 'Plasmapris kr / m';
-    }
-
-    if (!state.cutRateUserEdited && T > 0) {
-      const autoRate = calcCutRate(state.mat, T);
-      rateInput.value = autoRate.toFixed(1);
-
-      const tbl    = gas ? GAS_SPD : PLASMA_SPD;
-      let baseSpd  = lookupSpd(T, tbl);
-      if (!gas) {
-        if (state.mat === 'ALU')    baseSpd *= 1.15;
-        if (state.mat === '304')    baseSpd *= 0.75;
-        if (state.mat === '316L')   baseSpd *= 0.70;
-        if (state.mat === 'P265GH') baseSpd *= 0.92;
-      }
-      const spdRounded = Math.round(baseSpd / 10) * 10;
-      const costPerMin = (gas ? MACHINE_COST.gas : MACHINE_COST.plasma).toFixed(1);
-      cutNote.innerHTML = 'Auto: ~' + spdRounded + ' mm/min för ' + state.mat + ' ' + T + ' mm &nbsp;·&nbsp; ' + costPerMin + ' kr/min maskinkostnad.<br>Skärlängd tom = omkrets (2×L + 2×B). Ändra kr/m för eget pris.';
-    } else if (T === 0) {
-      cutNote.textContent = 'Ange tjocklek → hastighet och kr/m beräknas automatiskt.';
-    }
-  }
-
-  // ---- CALCULATE ----
-  function calculate() {
-    const L   = parseFloat(document.getElementById('length').value)    || 0;
-    const W   = parseFloat(document.getElementById('width').value)     || 0;
-    const T   = parseFloat(document.getElementById('thickness').value) || 0;
-    const P   = parseFloat(document.getElementById('kgprice').value)   || 0;
-    const QTY = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
-    const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
-
-    const area = document.getElementById('resultArea');
-
-    if (!L || !W || !T || !P) {
-      area.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
-      document.getElementById('marginPreview').textContent = '— kr';
-      document.getElementById('labourCutVal').textContent = '— kr';
-      document.getElementById('labourBreakdown').innerHTML = '';
-      document.getElementById('addToListBtn').classList.add('disabled');
-      return;
-    }
-
-    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    // ---- VIKT ----
-    const volM3    = (L/1000) * (W/1000) * (T/1000);
-    const weightKg = volM3 * state.density;
-    const matCost  = weightKg * P;
-
-    // ---- SKÄRNING ----
-    let cutCost = 0, cutLenM = 0, cutMethod = '';
-    if (state.cutEnabled) {
+  let cutCost = 0;
+  const isPlat = state.type === 'plat';
+  if (state.cutEnabled) {
+    if (isPlat) {
       const customLen = parseFloat(document.getElementById('cutLength').value);
-      cutLenM  = (customLen > 0 ? customLen : 2*(L+W)) / 1000;
-      const rate = parseFloat(document.getElementById('cutRate').value)
-                   || calcCutRate(state.mat, T);
-      cutCost   = cutLenM * rate;
-      cutMethod = isGasMethod() ? 'Gas' : 'Plasma';
-    }
-
-    // ---- OPERATÖR & HANTERING ----
-    let labourCost = 0, labourCutCost = 0, labourSetupCost = 0, labourHandleCost = 0;
-    let cutTimeMin = 0;
-    if (state.labourEnabled) {
-      const labourRateH  = parseFloat(document.getElementById('labourRate').value)  || 450;
-      const setupMin     = parseFloat(document.getElementById('setupTime').value)   || 0;
-      const camMin       = parseFloat(document.getElementById('camTime').value)     || 0;
-      const handleMin    = parseFloat(document.getElementById('handleTime').value)  || 0;
-      const labourPerMin = labourRateH / 60;
-
-      // Skärtid från hastighet
-      if (state.cutEnabled && cutLenM > 0) {
-        const useGas = isGasMethod();
-        const tbl    = useGas ? GAS_SPD : PLASMA_SPD;
-        let spd      = lookupSpd(T, tbl);
-        if (!useGas) {
-          if (state.mat === 'ALU')    spd *= 1.15;
-          if (state.mat === '304')    spd *= 0.75;
-          if (state.mat === '316L')   spd *= 0.70;
-          if (state.mat === 'P265GH') spd *= 0.92;
-        }
-        cutTimeMin     = (cutLenM * 1000) / spd;
-        labourCutCost  = cutTimeMin * labourPerMin * QTY;
-      }
-
-      // Fast per order
-      labourSetupCost  = (setupMin + camMin) * labourPerMin;
-      // Per detalj
-      labourHandleCost = handleMin * labourPerMin * QTY;
-
-      labourCost = labourCutCost + labourSetupCost + labourHandleCost;
-
-      document.getElementById('labourCutVal').textContent =
-        (state.cutEnabled && cutTimeMin > 0)
-          ? fmt(labourCutCost) + ' kr (' + (cutTimeMin * QTY).toFixed(1) + ' min)'
-          : '— kr (skärning ej aktiv)';
-
-      document.getElementById('labourBreakdown').innerHTML =
-        '<div class="info-row"><span>Skärtid (lön)</span><span>' + fmt(labourCutCost) + ' kr</span></div>' +
-        '<div class="info-row"><span>Upplägg + CAM (' + (setupMin+camMin).toFixed(0) + ' min/order)</span><span>' + fmt(labourSetupCost) + ' kr</span></div>' +
-        '<div class="info-row"><span>Nedlägg + gradning (' + handleMin + ' min × ' + QTY + ' st)</span><span>' + fmt(labourHandleCost) + ' kr</span></div>';
+      const cutLenM   = (customLen>0 ? customLen : getPerimeter(d)) / 1000;
+      const rate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d));
+      cutCost = cutLenM * rate;
     } else {
-      document.getElementById('labourCutVal').textContent = '— kr';
-      document.getElementById('labourBreakdown').innerHTML = '';
+      const rate = parseFloat(document.getElementById('cutRate').value) || 25;
+      cutCost = QTY * rate;
     }
-
-    // ---- TOTALT INPRIS ----
-    const inCost = matCost + cutCost + labourCost;
-
-    // ---- MARGINAL ----
-    let marginCost = 0;
-    if (state.marginEnabled && MRG > 0) {
-      marginCost = inCost * (MRG / 100);
-    }
-    document.getElementById('marginPreview').textContent =
-      (state.marginEnabled && MRG > 0) ? fmt(marginCost) + ' kr' : '— kr';
-
-    const sellEach  = inCost + marginCost;
-    const sellTotal = sellEach * QTY;
-
-    // ---- BYGG RESULTATRADER (med tooltips) ----
-    // Hjälpfunktion: skapar en rad med valfri tooltip
-    function row(label, value, cls, tip) {
-      const tipAttr = tip ? ' class="tt" data-tip="' + tip.replace(/"/g, '&quot;') + '"' : '';
-      return '<div class="result-row"' + tipAttr + '>' +
-        '<span class="result-label">' + label + '</span>' +
-        '<span class="result-value' + (cls ? ' ' + cls : '') + '">' + value + '</span>' +
-      '</div>';
-    }
-
-    let rows = '';
-
-    // Vikt
-    const tipVikt = L + ' × ' + W + ' × ' + T + ' mm\n÷ 1 000 000 000 = ' + volM3.toFixed(6) + ' m³\n× ' + state.density.toLocaleString('sv-SE') + ' kg/m³\n= ' + fmt(weightKg) + ' kg';
-    rows += row('Vikt / st', fmt(weightKg) + ' kg', '', tipVikt);
-
-    // Material
-    const tipMat = fmt(weightKg) + ' kg × ' + fmt(P) + ' kr/kg\n= ' + fmt(matCost) + ' kr';
-    rows += row('Material / st', fmt(matCost) + ' kr', '', tipMat);
-
-    // Skärning
-    if (state.cutEnabled) {
-      const useGas = isGasMethod();
-      const tblSpd = useGas ? GAS_SPD : PLASMA_SPD;
-      let spdInfo = lookupSpd(T, tblSpd);
-      if (!useGas) {
-        if (state.mat === 'ALU')    spdInfo *= 1.15;
-        if (state.mat === '304')    spdInfo *= 0.75;
-        if (state.mat === '316L')   spdInfo *= 0.70;
-        if (state.mat === 'P265GH') spdInfo *= 0.92;
-      }
-      const actualRate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, T);
-      const costPerMin = useGas ? MACHINE_COST.gas : MACHINE_COST.plasma;
-      const tipCut = fmt(cutLenM) + ' m skärlängd\n× ' + fmt(actualRate) + ' kr/m\n  (≈' + Math.round(spdInfo/10)*10 + ' mm/min · ' + costPerMin + ' kr/min)\n= ' + fmt(cutCost) + ' kr';
-      rows += row(cutMethod + ' ' + fmt(cutLenM) + ' m', fmt(cutCost) + ' kr', 'cut', tipCut);
-    }
-
-    // Personal
-    if (state.labourEnabled && labourCost > 0) {
-      const labourRateH  = parseFloat(document.getElementById('labourRate').value) || 450;
-      const setupMin     = parseFloat(document.getElementById('setupTime').value)  || 0;
-      const camMin       = parseFloat(document.getElementById('camTime').value)    || 0;
-      const handleMin    = parseFloat(document.getElementById('handleTime').value) || 0;
-      const perMin       = labourRateH / 60;
-
-      rows += '<div class="result-divider"></div>';
-
-      if (state.cutEnabled && labourCutCost > 0) {
-        const tipLC = (cutTimeMin).toFixed(2) + ' min/st × ' + QTY + ' st\n× ' + perMin.toFixed(2) + ' kr/min (' + labourRateH + ' kr/h)\n= ' + fmt(labourCutCost) + ' kr';
-        rows += row('Lön skärning', fmt(labourCutCost) + ' kr', 'labour', tipLC);
-      }
-
-      const tipSetup = (setupMin + camMin).toFixed(0) + ' min/order\n(upplägg ' + setupMin + ' + CAM ' + camMin + ' min)\n× ' + perMin.toFixed(2) + ' kr/min\n= ' + fmt(labourSetupCost) + ' kr';
-      rows += row('Upplägg + CAM', fmt(labourSetupCost) + ' kr', 'labour', tipSetup);
-
-      const tipHandle = handleMin + ' min/st × ' + QTY + ' st\n× ' + perMin.toFixed(2) + ' kr/min\n= ' + fmt(labourHandleCost) + ' kr';
-      rows += row('Nedlägg + gradning', fmt(labourHandleCost) + ' kr', 'labour', tipHandle);
-
-      const tipPersonal = fmt(labourCutCost) + ' (skärning)\n+ ' + fmt(labourSetupCost) + ' (upplägg/CAM)\n+ ' + fmt(labourHandleCost) + ' (hantering)\n= ' + fmt(labourCost) + ' kr';
-      rows += row('Personal totalt', fmt(labourCost) + ' kr', 'labour', tipPersonal);
-    }
-
-    // Inpris-summering
-    if (state.cutEnabled || state.labourEnabled) {
-      rows += '<div class="result-divider"></div>';
-      const inPerSt = inCost / QTY;
-      const tipInSt = fmt(matCost) + ' (material)' +
-        (state.cutEnabled ? '\n+ ' + fmt(cutCost) + ' (skärning)' : '') +
-        (state.labourEnabled ? '\n+ ' + fmt(labourCost) + ' (personal)' : '') +
-        (QTY > 1 ? '\n÷ ' + QTY + ' st' : '') +
-        '\n= ' + fmt(inPerSt) + ' kr/st';
-      rows += row('Inpris / st', fmt(inPerSt) + ' kr', '', tipInSt);
-      if (QTY > 1) {
-        const tipInOrder = fmt(inPerSt) + ' kr/st × ' + QTY + ' st\n= ' + fmt(inCost) + ' kr';
-        rows += row('Inpris / order', fmt(inCost) + ' kr', '', tipInOrder);
-      }
-    }
-
-    // Marginal
-    if (state.marginEnabled && MRG > 0) {
-      rows += '<div class="result-divider"></div>';
-      const tipMrg = fmt(inCost) + ' kr × ' + MRG + '%\n= ' + fmt(marginCost) + ' kr påslag';
-      rows += row('Marginal ' + MRG + '%', '+ ' + fmt(marginCost) + ' kr', 'margin-val', tipMrg);
-      const tipSell = fmt(inCost) + ' kr inpris\n+ ' + fmt(marginCost) + ' kr marginal\n= ' + fmt(sellEach) + ' kr/st';
-      rows += row('Försäljningspris / st', fmt(sellEach) + ' kr', 'sell', tipSell);
-    }
-
-    // Antal
-    if (QTY > 1) {
-      const tipQty = QTY + ' st × ' + fmt(weightKg) + ' kg\n= ' + fmt(weightKg*QTY) + ' kg totalt';
-      rows += row('Antal · tot vikt', QTY + ' st · ' + fmt(weightKg*QTY) + ' kg', '', tipQty);
-    }
-
-    const totalLabel = (state.marginEnabled && MRG > 0)
-      ? (QTY > 1 ? 'FÖRSÄLJNING TOT' : 'FÖRSÄLJNINGSPRIS')
-      : (QTY > 1 ? 'TOTALT' : 'PRIS');
-
-    document.getElementById('addToListBtn').classList.remove('disabled');
-    area.innerHTML =
-      '<div class="result-card">' +
-        '<div class="card-title" style="margin-bottom:12px;">' + state.mat + ' — ' + L + '×' + W + '×' + T + ' mm</div>' +
-        rows +
-        '<div class="result-total">' +
-          '<span class="rt-label">' + totalLabel + '</span>' +
-          '<span class="rt-price">' + fmt(sellTotal) + '<span class="rt-currency">kr</span></span>' +
-        '</div>' +
-      '</div>';
   }
 
-  // ---- HÄMTA PRIS ----
-  async function fetchPrice() {
-    const btn = document.getElementById('fetchBtn');
-    const dot = document.getElementById('sourceDot');
-    const src = document.getElementById('sourceText');
-    btn.innerHTML = '<div class="spinner"></div>';
-    btn.disabled = true;
-
-    try {
-      let priceKg = null, source = '';
-
-      if (state.mat === 'ALU') {
-        const r = await fetch('https://metals.live/api/v1/spot?metals=aluminum', {signal: AbortSignal.timeout(6000)});
-        if (r.ok) {
-          const d = await r.json();
-          const usdT = d[0]?.price;
-          if (usdT) {
-            priceKg = Math.round(usdT / 1000 * await getUSDSEK() * 100) / 100;
-            source = 'LME Alu spot';
-          }
-        }
-      } else if (state.mat === '304' || state.mat === '316L') {
-        const r = await fetch('https://metals.live/api/v1/spot?metals=nickel', {signal: AbortSignal.timeout(6000)});
-        if (r.ok) {
-          const d = await r.json();
-          const usdT = d[0]?.price;
-          if (usdT) {
-            const mult = state.mat === '316L' ? 4.2 : 3.5;
-            priceKg = Math.round(usdT / 1000 * await getUSDSEK() * mult * 100) / 100;
-            source = 'LME Ni spot (estimat)';
-          }
-        }
-      } else { throw new Error('no_api'); }
-
-      if (priceKg) {
-        document.getElementById('kgprice').value = priceKg;
-        dot.style.background = 'var(--green)';
-        dot.classList.remove('manual');
-        const ps = PRICE_SOURCES[state.mat];
-        const sekRate = state.usdSek ? state.usdSek.toFixed(2) : '—';
-        const timeStr = new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
-        src.innerHTML = ps
-          ? `<a href="${ps.url}" target="_blank" style="color:var(--green);text-decoration:none;">${ps.label}</a><br><span style="font-size:0.55rem;color:var(--muted);">USD/SEK ${sekRate} &nbsp;·&nbsp; Hämtat ${timeStr}</span>`
-          : `${source} &nbsp;·&nbsp; ${timeStr}`;
-        state.priceSourceLabel = ps ? ps.label : source;
-      } else { throw new Error('no_price'); }
-
-    } catch {
-      document.getElementById('kgprice').value = defaultPrices[state.mat];
-      dot.style.background = 'var(--accent2)';
-      dot.classList.add('manual');
-      src.innerHTML = 'Referenspris &nbsp;·&nbsp; uppdatera manuellt';
-      state.priceSourceLabel = 'Referenspris';
-    }
-
-    btn.innerHTML = '↓ HÄMTA PRIS';
-    btn.disabled = false;
-    calculate();
+  let labourCost = 0;
+  if (state.labourEnabled) {
+    const lrh  = parseFloat(document.getElementById('labourRate').value)||450;
+    const setup= parseFloat(document.getElementById('setupTime').value)||0;
+    const cam  = parseFloat(document.getElementById('camTime').value)||0;
+    const hand = parseFloat(document.getElementById('handleTime').value)||0;
+    const lpm  = lrh/60;
+    let ctm = 0;
+    if (state.cutEnabled && isPlat) {
+      const T2=getThickness(d); const useGas=isGasMethod(T2);
+      const tbl=useGas?GAS_SPD:PLASMA_SPD; let spd=lookupSpd(T2,tbl);
+      if(!useGas){if(state.mat==='ALU')spd*=1.15;if(state.mat==='304')spd*=0.75;if(state.mat==='316L')spd*=0.70;if(state.mat==='P265GH')spd*=0.92;}
+      const cl = (parseFloat(document.getElementById('cutLength').value)||0)>0
+        ? parseFloat(document.getElementById('cutLength').value)/1000
+        : getPerimeter(d)/1000;
+      ctm = (cl*1000)/spd;
+    } else if (state.cutEnabled && !isPlat) { ctm = 2; }
+    labourCost = (ctm*lpm*QTY) + ((setup+cam)*lpm) + (hand*lpm*QTY);
   }
 
-  async function getUSDSEK() {
-    try {
-      const r = await fetch('https://open.er-api.com/v6/latest/USD', {signal: AbortSignal.timeout(4000)});
-      if (r.ok) {
-        const d = await r.json();
-        const rate = d.rates?.SEK || 10.5;
-        state.usdSek = rate;
-        return rate;
-      }
-    } catch {}
-    state.usdSek = state.usdSek || 10.5;
-    return state.usdSek || 10.5;
+  const inCost = matCost + cutCost + labourCost;
+  let marginCost = 0;
+  if (state.marginEnabled) {
+    const MRG = parseFloat(document.getElementById('marginPct').value)||0;
+    marginCost = inCost * (MRG/100);
+  }
+  const sellPerSt = (inCost + marginCost) / QTY;
+
+  const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
+  const cutLabel = state.cutEnabled ? (' · ' + (isPlat ? (isGasMethod(getThickness(d))?'Gas':'Plasma') : 'Såg')) : '';
+
+  quoteList.push({
+    id: Date.now(),
+    title: displayTitle(d),
+    sub: typeLabel + cutLabel,
+    qty: QTY,
+    pricePerSt: sellPerSt,
+    weightPerSt: weightKg,
+    snap: {
+      type:state.type, mat:state.mat, density:state.density, d, P:P_base, finish:state.rundstangFinish,
+      cutEnabled:state.cutEnabled, cutLength:document.getElementById('cutLength').value,
+      cutRate:document.getElementById('cutRate').value, cutRateUserEdited:state.cutRateUserEdited,
+      labourEnabled:state.labourEnabled,
+      labourRate:document.getElementById('labourRate').value,
+      setupTime:document.getElementById('setupTime').value,
+      camTime:document.getElementById('camTime').value,
+      handleTime:document.getElementById('handleTime').value,
+      marginEnabled:state.marginEnabled,
+      marginPct:document.getElementById('marginPct').value,
+    }
+  });
+
+  renderList();
+
+  // Rensa fälten
+  DIM_FIELDS[state.type].forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) el.value = f.val || '';
+  });
+  document.getElementById('kgprice').value = '';
+  document.getElementById('cutLength').value = '';
+  state.cutRateUserEdited = false;
+  document.getElementById('addToListBtn').classList.add('disabled');
+  document.getElementById('resultArea').innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
+  document.getElementById('marginPreview').textContent = '— kr';
+  document.getElementById('labourCutVal').textContent  = '— kr';
+  document.getElementById('labourBreakdown').innerHTML = '';
+
+  const btn = document.getElementById('addToListBtn');
+  btn.innerHTML = '✓ TILLAGD';
+  setTimeout(() => { btn.innerHTML = '<span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA'; }, 900);
+}
+
+function renderList() {
+  const wrap   = document.getElementById('quoteListWrap');
+  const rowsEl = document.getElementById('quoteRows');
+  if (quoteList.length === 0) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  let html='', grandTotal=0, grandWeight=0, grandQty=0;
+  quoteList.forEach(item => {
+    const rt = item.pricePerSt * item.qty;
+    grandTotal += rt; grandWeight += item.weightPerSt*item.qty; grandQty += item.qty;
+    html += `<div class="quote-row" data-qid="${item.id}">
+      <div class="quote-info">
+        <div class="quote-title">${item.title}</div>
+        <div class="quote-sub">${item.sub} · ${fmt(item.pricePerSt)} kr/st</div>
+      </div>
+      <div class="quote-qty-wrap">
+        <button class="quote-qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <input class="quote-qty-input" type="number" value="${item.qty}" min="1"
+          onchange="setQty(${item.id},this.value)" oninput="setQty(${item.id},this.value)">
+        <button class="quote-qty-btn" onclick="changeQty(${item.id},1)">+</button>
+      </div>
+      <div class="quote-prices">
+        <div class="quote-total">${fmt(rt)}</div>
+        <div class="quote-unit">kr</div>
+      </div>
+      <button class="quote-edit-btn" onclick="restoreFromList(${item.id})">✎</button>
+      <button class="quote-del-btn" onclick="removeFromList(${item.id})">✕</button>
+    </div>`;
+  });
+  rowsEl.innerHTML = html;
+  document.getElementById('quoteGrandTotal').textContent = fmt(grandTotal);
+  document.getElementById('quoteFooterSub').textContent  = `${grandQty} st · ${fmt(grandWeight)} kg totalt`;
+}
+
+function changeQty(id,delta) { const i=quoteList.find(x=>x.id===id); if(i){i.qty=Math.max(1,i.qty+delta);renderList();} }
+function setQty(id,val) { const i=quoteList.find(x=>x.id===id); const n=parseInt(val); if(i&&n>0){i.qty=n;renderList();} }
+function removeFromList(id) { const idx=quoteList.findIndex(x=>x.id===id); if(idx>=0){quoteList.splice(idx,1);renderList();} }
+function clearList() { if(quoteList.length===0)return; if(confirm('Rensa hela listan?')){quoteList.length=0;renderList();} }
+
+function restoreFromList(id) {
+  const item = quoteList.find(i=>i.id===id);
+  if (!item) return;
+  const s = item.snap;
+
+  // Byt typ om nödvändigt
+  if (s.type !== state.type) {
+    document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type===s.type));
+    switchType(s.type);
   }
 
-
-
-  // ---- TEMA ----
-  function toggleTheme() {
-    const light = document.body.classList.toggle('light');
-    document.getElementById('themeIcon').textContent = light ? '🌙' : '☀';
-    localStorage.setItem('hmv_theme', light ? 'light' : 'dark');
-  }
-  (function() {
-    if (localStorage.getItem('hmv_theme') === 'light') {
-      document.body.classList.add('light');
-      const icon = document.getElementById('themeIcon');
-      if (icon) icon.textContent = '🌙';
+  // Material
+  setTimeout(() => {
+    document.querySelectorAll('#matGrid .mat-btn').forEach(b=>b.classList.toggle('active', b.dataset.mat===s.mat));
+    state.mat = s.mat; state.density = s.density;
+    if (s.type === 'rundstang' && s.finish) {
+      state.rundstangFinish = s.finish;
+      // Update finish grid active state
+      setTimeout(() => {
+        document.querySelectorAll('#finishGrid .mat-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.finish === s.finish));
+      }, 80);
     }
-  })();
-
-
-  // ---- OFFERTLISTA ----
-  const quoteList = [];
-
-  function addToList() {
-    const L   = parseFloat(document.getElementById('length').value)    || 0;
-    const W   = parseFloat(document.getElementById('width').value)     || 0;
-    const T   = parseFloat(document.getElementById('thickness').value) || 0;
-    const P   = parseFloat(document.getElementById('kgprice').value)   || 0;
-    const QTY = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
-    if (!L || !W || !T || !P) return;
-
-    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    // Räkna ut samma siffror som calculate()
-    const volM3    = (L/1000) * (W/1000) * (T/1000);
-    const weightKg = volM3 * state.density;
-    const matCost  = weightKg * P;
-
-    let cutCost = 0, cutMethod = '';
-    if (state.cutEnabled) {
-      const customLen = parseFloat(document.getElementById('cutLength').value);
-      const cutLenM   = (customLen > 0 ? customLen : 2*(L+W)) / 1000;
-      const rate      = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, T);
-      cutCost         = cutLenM * rate;
-      cutMethod       = isGasMethod() ? 'Gas' : 'Plasma';
-    }
-
-    let labourCost = 0;
-    if (state.labourEnabled) {
-      const labourRateH  = parseFloat(document.getElementById('labourRate').value)  || 450;
-      const setupMin     = parseFloat(document.getElementById('setupTime').value)   || 0;
-      const camMin       = parseFloat(document.getElementById('camTime').value)     || 0;
-      const handleMin    = parseFloat(document.getElementById('handleTime').value)  || 0;
-      const perMin       = labourRateH / 60;
-      let cutTimeMin     = 0;
-      if (state.cutEnabled) {
-        const useGas = isGasMethod();
-        const tbl    = useGas ? GAS_SPD : PLASMA_SPD;
-        let spd      = lookupSpd(T, tbl);
-        if (!useGas) {
-          if (state.mat === 'ALU')    spd *= 1.15;
-          if (state.mat === '304')    spd *= 0.75;
-          if (state.mat === '316L')   spd *= 0.70;
-          if (state.mat === 'P265GH') spd *= 0.92;
-        }
-        cutTimeMin = ((2*(L+W)/1000) * 1000) / spd;
-      }
-      labourCost = (cutTimeMin * perMin * QTY) + ((setupMin + camMin) * perMin) + (handleMin * perMin * QTY);
-    }
-
-    const inCostPerSt = (matCost + cutCost + labourCost) / QTY;
-    let marginCost = 0;
-    if (state.marginEnabled) {
-      const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
-      marginCost = (inCostPerSt * QTY) * (MRG / 100);
-    }
-    const sellPerSt = inCostPerSt + marginCost / QTY;
-
-    const cutLabel = state.cutEnabled ? ' · ' + cutMethod : '';
-    quoteList.push({
-      id: Date.now(),
-      title: state.mat + ' ' + L + '×' + W + '×' + T + ' mm' + cutLabel,
-      qty: QTY,
-      pricePerSt: sellPerSt,
-      weightPerSt: weightKg,
-      // Snapshot för redigering
-      snap: {
-        mat: state.mat, density: state.density,
-        L, W, T, P, QTY,
-        cutEnabled: state.cutEnabled,
-        cutLength: document.getElementById('cutLength').value,
-        cutRate: document.getElementById('cutRate').value,
-        cutRateUserEdited: state.cutRateUserEdited,
-        labourEnabled: state.labourEnabled,
-        labourRate: document.getElementById('labourRate').value,
-        setupTime: document.getElementById('setupTime').value,
-        camTime: document.getElementById('camTime').value,
-        handleTime: document.getElementById('handleTime').value,
-        marginEnabled: state.marginEnabled,
-        marginPct: document.getElementById('marginPct').value,
-      }
-    });
-
-    renderList();
-
-    // Rensa fälten efter att plåten lagts till
-    ['length','width','thickness','kgprice','qty'].forEach(id => {
-      const el = document.getElementById(id);
-      if (id === 'qty') el.value = '1';
-      else el.value = '';
-    });
-    document.getElementById('cutLength').value = '';
-    state.cutRateUserEdited = false;
-    document.getElementById('addToListBtn').classList.add('disabled');
-    document.getElementById('resultArea').innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
-    document.getElementById('marginPreview').textContent = '— kr';
-    document.getElementById('labourCutVal').textContent = '— kr';
-    document.getElementById('labourBreakdown').innerHTML = '';
-
-    // Kort visuell feedback på knappen
-    const btn = document.getElementById('addToListBtn');
-    btn.innerHTML = '✓ TILLAGD';
-    setTimeout(() => { btn.innerHTML = '<span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA'; }, 900);
-  }
-
-
-  function restoreFromList(id) {
-    const item = quoteList.find(i => i.id === id);
-    if (!item) return;
-    const s = item.snap;
-
-    // Material
-    document.querySelectorAll('.mat-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.mat === s.mat);
-    });
-    state.mat = s.mat;
-    state.density = s.density;
-    document.getElementById('densityVal').textContent = s.density.toLocaleString('sv-SE');
 
     // Dimensioner
-    document.getElementById('length').value    = s.L;
-    document.getElementById('width').value     = s.W;
-    document.getElementById('thickness').value = s.T;
-    document.getElementById('kgprice').value   = s.P;
-    document.getElementById('qty').value       = s.QTY;
+    Object.entries(s.d).forEach(([k,v]) => {
+      const map = {L:'f_length',W:'f_width',T:'f_thick',QTY:'f_qty',OD:'f_od',WT:'f_wt',D:'f_dia',A:'f_a',B:'f_b',H:'f_h'};
+      const fid = map[k] || ('f_'+k.toLowerCase());
+      const el = document.getElementById(fid);
+      if (el) el.value = v;
+    });
+    document.getElementById('kgprice').value = s.P;
 
     // Skärning
     state.cutEnabled = s.cutEnabled;
     document.getElementById('cutToggle').classList.toggle('on', s.cutEnabled);
     document.getElementById('cutInputs').classList.toggle('disabled', !s.cutEnabled);
     document.getElementById('cutBadgeWrap').style.display = s.cutEnabled ? 'block' : 'none';
-    document.getElementById('cutToggleSub').textContent = s.cutEnabled ? 'Beräknas separat och läggs på' : 'Ej inkluderat i kg-priset';
     document.getElementById('cutLength').value = s.cutLength;
     document.getElementById('cutRate').value   = s.cutRate;
     state.cutRateUserEdited = s.cutRateUserEdited;
@@ -1586,16 +1144,13 @@
     // Personal
     state.labourEnabled = s.labourEnabled;
     document.getElementById('labourToggle').classList.toggle('on', s.labourEnabled);
-    const labInputs = document.getElementById('labourInputs');
-    labInputs.style.opacity       = s.labourEnabled ? '1' : '0.3';
-    labInputs.style.pointerEvents = s.labourEnabled ? 'auto' : 'none';
-    ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
-      document.getElementById(id).disabled = !s.labourEnabled;
+    const li = document.getElementById('labourInputs');
+    li.style.opacity = s.labourEnabled?'1':'0.3';
+    li.style.pointerEvents = s.labourEnabled?'auto':'none';
+    ['labourRate','setupTime','camTime','handleTime'].forEach(fid2=>{
+      document.getElementById(fid2).disabled = !s.labourEnabled;
+      document.getElementById(fid2).value = s[fid2];
     });
-    document.getElementById('labourRate').value  = s.labourRate;
-    document.getElementById('setupTime').value   = s.setupTime;
-    document.getElementById('camTime').value     = s.camTime;
-    document.getElementById('handleTime').value  = s.handleTime;
 
     // Marginal
     state.marginEnabled = s.marginEnabled;
@@ -1603,152 +1158,97 @@
     document.getElementById('marginPct').disabled = !s.marginEnabled;
     document.getElementById('marginPct').value = s.marginPct;
 
-    syncCutMethod();
-    calculate();
+    syncCutMethod(); calculate();
+    window.scrollTo({top:0,behavior:'smooth'});
+    document.querySelectorAll('.quote-row').forEach(r=>r.classList.remove('editing'));
+    const re = document.querySelector(`[data-qid="${id}"]`);
+    if (re) re.classList.add('editing');
+  }, 50);
+}
 
-    // Scrolla upp till kalkylatorn
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Markera raden som aktiv
-    document.querySelectorAll('.quote-row').forEach(r => r.classList.remove('editing'));
-    const rowEl = document.querySelector('[data-qid="' + id + '"]');
-    if (rowEl) rowEl.classList.add('editing');
-  }
-
-  function copyList() {
-    if (quoteList.length === 0) return;
-    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    let text = 'HMV PLÅTPRIS — ' + new Date().toLocaleDateString('sv-SE') + '\n';
-    text += '─────────────────────────────\n';
-    let grandTotal = 0, grandWeight = 0, grandQty = 0;
-    quoteList.forEach((item, i) => {
-      const rowTotal = item.pricePerSt * item.qty;
-      grandTotal  += rowTotal;
-      grandWeight += item.weightPerSt * item.qty;
-      grandQty    += item.qty;
-      text += (i+1) + '. ' + item.title + '\n';
-      text += '   ' + item.qty + ' st  ×  ' + fmt(item.pricePerSt) + ' kr/st  =  ' + fmt(rowTotal) + ' kr\n';
-    });
-    text += '─────────────────────────────\n';
-    text += 'TOTALT: ' + fmt(grandTotal) + ' kr\n';
-    text += '(' + grandQty + ' st · ' + fmt(grandWeight) + ' kg)\n';
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('copyListBtn');
-        btn.textContent = '✓ KOPIERAT';
-        setTimeout(() => { btn.textContent = '⎘ KOPIERA TEXT'; }, 1800);
-      });
-    } else {
-      // Fallback for older browsers
-      const ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      const btn = document.getElementById('copyListBtn');
-      btn.textContent = '✓ KOPIERAT';
-      setTimeout(() => { btn.textContent = '⎘ KOPIERA TEXT'; }, 1800);
-    }
-  }
-
-  function renderList() {
-    const wrap = document.getElementById('quoteListWrap');
-    const rowsEl = document.getElementById('quoteRows');
-    const grandEl = document.getElementById('quoteGrandTotal');
-    const subEl   = document.getElementById('quoteFooterSub');
-
-    if (quoteList.length === 0) {
-      wrap.style.display = 'none';
-      return;
-    }
-    wrap.style.display = 'block';
-
-    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    let html = '';
-    let grandTotal = 0;
-    let grandWeight = 0;
-    let grandQty = 0;
-
-    quoteList.forEach(item => {
-      const rowTotal = item.pricePerSt * item.qty;
-      grandTotal  += rowTotal;
-      grandWeight += item.weightPerSt * item.qty;
-      grandQty    += item.qty;
-
-      html += '<div class="quote-row" data-qid="' + item.id + '">' +
-        '<div class="quote-info">' +
-          '<div class="quote-title">' + item.title + '</div>' +
-          '<div class="quote-sub">' + fmt(item.pricePerSt) + ' kr/st</div>' +
-        '</div>' +
-        '<div class="quote-qty-wrap">' +
-          '<button class="quote-qty-btn" onclick="changeQty(' + item.id + ',-1)">−</button>' +
-          '<input class="quote-qty-input" type="number" value="' + item.qty + '" min="1" ' +
-            'onchange="setQty(' + item.id + ', this.value)" ' +
-            'oninput="setQty(' + item.id + ', this.value)">' +
-          '<button class="quote-qty-btn" onclick="changeQty(' + item.id + ',1)">+</button>' +
-        '</div>' +
-        '<div class="quote-prices">' +
-          '<div class="quote-total">' + fmt(rowTotal) + '</div>' +
-          '<div class="quote-unit">kr</div>' +
-        '</div>' +
-        '<button class="quote-edit-btn" title="Redigera" onclick="restoreFromList(' + item.id + ')">✎</button>' +
-        '<button class="quote-del-btn" title="Ta bort" onclick="removeFromList(' + item.id + ')">✕</button>' +
-      '</div>';
-    });
-
-    rowsEl.innerHTML = html;
-    grandEl.textContent = fmt(grandTotal);
-    subEl.textContent = grandQty + ' st · ' + fmt(grandWeight) + ' kg totalt';
-  }
-
-  function changeQty(id, delta) {
-    const item = quoteList.find(i => i.id === id);
-    if (!item) return;
-    item.qty = Math.max(1, item.qty + delta);
-    renderList();
-  }
-
-  function setQty(id, val) {
-    const item = quoteList.find(i => i.id === id);
-    if (!item) return;
-    const n = parseInt(val);
-    if (n > 0) { item.qty = n; renderList(); }
-  }
-
-  function removeFromList(id) {
-    const idx = quoteList.findIndex(i => i.id === id);
-    if (idx >= 0) quoteList.splice(idx, 1);
-    renderList();
-  }
-
-  function clearList() {
-    if (quoteList.length === 0) return;
-    if (confirm('Rensa hela listan?')) { quoteList.length = 0; renderList(); }
-  }
-
-  // ---- TOOLTIP TOUCH (långtryck) ----
-  let tipTimer = null;
-  document.addEventListener('touchstart', e => {
-    const el = e.target.closest('.tt');
-    if (!el) return;
-    tipTimer = setTimeout(() => {
-      document.querySelectorAll('.tt.tip-active').forEach(t => t.classList.remove('tip-active'));
-      el.classList.add('tip-active');
-    }, 400);
-  }, {passive: true});
-  document.addEventListener('touchend', () => { clearTimeout(tipTimer); }, {passive: true});
-  document.addEventListener('touchmove', () => { clearTimeout(tipTimer); }, {passive: true});
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.tt')) {
-      document.querySelectorAll('.tt.tip-active').forEach(t => t.classList.remove('tip-active'));
-    }
+function copyList() {
+  if (!quoteList.length) return;
+  const fmt = n => n.toLocaleString('sv-SE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  let text = `HMV PLÅTPRIS — ${new Date().toLocaleDateString('sv-SE')}\n${'─'.repeat(34)}\n`;
+  let total=0, weight=0, qty=0;
+  quoteList.forEach((item,i) => {
+    const rt = item.pricePerSt*item.qty;
+    total+=rt; weight+=item.weightPerSt*item.qty; qty+=item.qty;
+    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(item.pricePerSt)} kr/st  =  ${fmt(rt)} kr\n`;
   });
+  text += `${'─'.repeat(34)}\nTOTALT: ${fmt(total)} kr\n(${qty} st · ${fmt(weight)} kg)\n`;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(()=>flashCopy());
+  } else {
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    flashCopy();
+  }
+}
+function flashCopy() {
+  const btn=document.getElementById('copyListBtn');
+  btn.textContent='✓ KOPIERAT';
+  setTimeout(()=>{btn.textContent='⎘ KOPIERA';},1800);
+}
 
-  // Init
-  syncCutMethod();
-  calculate();
+// ================================================================
+// HÄMTA PRIS
+// ================================================================
+async function fetchPrice() {
+  const btn=document.getElementById('fetchBtn'), dot=document.getElementById('sourceDot'), src=document.getElementById('sourceText');
+  btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
+  try {
+    let priceKg=null, source='';
+    if (state.mat==='ALU') {
+      const r=await fetch('https://metals.live/api/v1/spot?metals=aluminum',{signal:AbortSignal.timeout(6000)});
+      if(r.ok){const d=await r.json(); const ut=d[0]?.price; if(ut){priceKg=Math.round(ut/1000*await getUSDSEK()*100)/100; source='LME Alu';}}
+    } else if (state.mat==='304'||state.mat==='316L') {
+      const r=await fetch('https://metals.live/api/v1/spot?metals=nickel',{signal:AbortSignal.timeout(6000)});
+      if(r.ok){const d=await r.json(); const ut=d[0]?.price; if(ut){const m=state.mat==='316L'?4.2:3.5; priceKg=Math.round(ut/1000*await getUSDSEK()*m*100)/100; source='LME Ni';}}
+    } else { throw new Error('no_api'); }
+    if (priceKg) {
+      document.getElementById('kgprice').value=priceKg;
+      dot.style.background='var(--green)'; dot.classList.remove('manual');
+      const ps=PRICE_SOURCES[state.mat], sekRate=state.usdSek.toFixed(2);
+      const timeStr=new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'});
+      src.innerHTML=ps
+        ? `<a href="${ps.url}" target="_blank" style="color:var(--green);text-decoration:none;">${ps.label}</a><br><span style="font-size:.55rem;color:var(--muted);">USD/SEK ${sekRate} · ${timeStr}</span>`
+        : `${source} · ${timeStr}`;
+      calculate();
+    } else throw new Error('no_price');
+  } catch {
+    const def = (MATERIALS[state.type]||[]).find(m=>m.key===state.mat)?.price || 12.5;
+    document.getElementById('kgprice').value=def;
+    dot.style.background='var(--accent2)'; dot.classList.add('manual');
+    src.innerHTML='Referenspris · uppdatera manuellt';
+    calculate();
+  }
+  btn.innerHTML='↓ HÄMTA PRIS'; btn.disabled=false;
+}
+async function getUSDSEK() {
+  try{const r=await fetch('https://open.er-api.com/v6/latest/USD',{signal:AbortSignal.timeout(4000)}); if(r.ok){const d=await r.json(); state.usdSek=d.rates?.SEK||10.5; return state.usdSek;}}catch{}
+  return state.usdSek||10.5;
+}
+
+// ================================================================
+// TOOLTIP TOUCH
+// ================================================================
+let tipTimer=null;
+document.addEventListener('touchstart',e=>{const el=e.target.closest('.tt');if(!el)return;tipTimer=setTimeout(()=>{document.querySelectorAll('.tt.tip-active').forEach(t=>t.classList.remove('tip-active'));el.classList.add('tip-active');},400);},{passive:true});
+document.addEventListener('touchend',()=>clearTimeout(tipTimer),{passive:true});
+document.addEventListener('touchmove',()=>clearTimeout(tipTimer),{passive:true});
+document.addEventListener('click',e=>{if(!e.target.closest('.tt'))document.querySelectorAll('.tt.tip-active').forEach(t=>t.classList.remove('tip-active'));});
+
+// ================================================================
+// TEMA
+// ================================================================
+function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeIcon').textContent=l?'🌙':'☀';localStorage.setItem('hmv_theme',l?'light':'dark');}
+function applyTheme(){if(localStorage.getItem('hmv_theme')==='light'){document.body.classList.add('light');const i=document.getElementById('themeIcon');if(i)i.textContent='🌙';}}
+
+// ================================================================
+// START
+// ================================================================
+init();
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HMV Plåtpris</title>
+<title>HMV Materialpris</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -183,7 +183,7 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
 <body>
 <header>
   <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/></svg></div>
-  <div><h1>HMV Plåtpris</h1><small>MATERIALKALKYLATOR</small></div>
+  <div><h1>HMV</h1><small>MATERIALKALKYLATOR</small></div>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><span id="themeIcon">☀</span></button>
 </header>
 <main>
@@ -534,37 +534,37 @@ const DIM_FIELDS = {
   plat: [
     {id:'f_length',  label:'Längd mm',    ph:'2000'},
     {id:'f_width',   label:'Bredd mm',    ph:'1000'},
-    {id:'f_thick',   label:'Tjocklek mm', ph:'5', step:'0.1'},
+    {id:'f_thick',   label:'Tj. mm', ph:'5', step:'0.1'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],
   ror: [
-    {id:'f_od',      label:'Ytterdia mm', ph:'60.3'},
-    {id:'f_wt',      label:'Godstjocklek mm', ph:'4', step:'0.1'},
+    {id:'f_od',      label:'Ytterdia', ph:'60.3'},
+    {id:'f_wt',      label:'Gods mm', ph:'4', step:'0.1'},
     {id:'f_length',  label:'Längd mm',    ph:'1000'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],
   plattjarn: [
     {id:'f_width',   label:'Bredd mm',    ph:'50'},
-    {id:'f_thick',   label:'Tjocklek mm', ph:'10'},
+    {id:'f_thick',   label:'Tj. mm', ph:'10'},
     {id:'f_length',  label:'Längd mm',    ph:'3000'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],
   rundstang: [
-    {id:'f_dia',     label:'Diameter mm', ph:'30'},
+    {id:'f_dia',     label:'Dia mm', ph:'30'},
     {id:'f_length',  label:'Längd mm',    ph:'3000'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],
   vinkeljarn: [
     {id:'f_a',       label:'Ben A mm',    ph:'50'},
     {id:'f_b',       label:'Ben B mm',    ph:'50'},
-    {id:'f_thick',   label:'Godstjocklek mm', ph:'5'},
+    {id:'f_thick',   label:'Gods mm', ph:'5'},
     {id:'f_length',  label:'Längd mm',    ph:'3000'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],
   vkr: [
     {id:'f_w',       label:'Bredd mm',    ph:'60'},
     {id:'f_h',       label:'Höjd mm',     ph:'40'},
-    {id:'f_thick',   label:'Godstjocklek mm', ph:'4', step:'0.5'},
+    {id:'f_thick',   label:'Gods mm', ph:'4', step:'0.5'},
     {id:'f_length',  label:'Längd mm',    ph:'3000'},
     {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
   ],

@@ -1560,6 +1560,38 @@ function setupToggles() {
   document.getElementById('grovToggleRow').addEventListener('click', () => {
     state.grovEnabled = !state.grovEnabled;
     document.getElementById('grovToggle').classList.toggle('on', state.grovEnabled);
+
+    // När grovberäkning stängs AV — aktivera skärning, personal och marginal automatiskt
+    if (!state.grovEnabled) {
+      // Skärning
+      if (!state.cutEnabled) {
+        state.cutEnabled = true;
+        document.getElementById('cutToggle').classList.add('on');
+        document.getElementById('cutInputs').classList.remove('disabled');
+        document.getElementById('cutBadgeWrap').style.display = 'block';
+        document.getElementById('cutToggleSub').textContent = 'Beräknas separat och läggs på';
+        syncCutMethod();
+      }
+      // Personal
+      if (!state.labourEnabled) {
+        state.labourEnabled = true;
+        document.getElementById('labourToggle').classList.add('on');
+        const li = document.getElementById('labourInputs');
+        if (li) { li.style.opacity = '1'; li.style.pointerEvents = 'auto'; }
+        ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = false;
+        });
+      }
+      // Marginal
+      if (!state.marginEnabled) {
+        state.marginEnabled = true;
+        document.getElementById('marginToggle').classList.add('on');
+        const mp = document.getElementById('marginPct');
+        if (mp) mp.disabled = false;
+      }
+    }
+
     syncGrovMode();
     calculate();
   });

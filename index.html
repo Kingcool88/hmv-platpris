@@ -207,6 +207,34 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
     </div>
   </div>
 
+  <!-- GROVBERÄKNING -->
+  <div class="card" id="grovCard">
+    <div class="card-title">Beräkningsmetod</div>
+    <div class="toggle-row" id="grovToggleRow">
+      <div class="toggle on" id="grovToggle"></div>
+      <div>
+        <div class="toggle-label">Grovberäkning</div>
+        <div class="toggle-sub" id="grovToggleSub">Snabbt styckpris — material × påslag × produktpåslag</div>
+      </div>
+    </div>
+    <div id="grovInputs" style="margin-top:12px;transition:opacity .2s;">
+      <div class="dim-row dim-2">
+        <div class="input-wrap">
+          <label>Materialpåslag %</label>
+          <input type="number" id="grovMatMarkup" inputmode="decimal" placeholder="15" min="0" step="1" value="15">
+        </div>
+        <div class="input-wrap">
+          <label>Produktpåslag %</label>
+          <input type="number" id="grovProdMarkup" inputmode="decimal" placeholder="30" min="0" step="1" value="30">
+        </div>
+      </div>
+      <div class="cut-note" style="margin-top:8px;">
+        Slutpris = (vikt × kr/kg × (1 + mat%)) × (1 + prod%)<br>
+        Skärning, personal och marginal-kortet används ej i grovläge.
+      </div>
+    </div>
+  </div>
+
   <!-- SKÄRNING / SÅGNING -->
   <div class="card" id="cutCard">
     <div class="card-title" id="cutCardTitle">Skär/sågkostnad</div>
@@ -407,8 +435,18 @@ const DIM_FIELDS = {
 
 // Skärhastigheter
 const MACHINE_COST = {plasma:4.5, gas:3.5};
-const PLASMA_SPD = [{t:3,s:5000},{t:5,s:3800},{t:8,s:2800},{t:10,s:2200},{t:12,s:1800},{t:15,s:1400},{t:20,s:1000},{t:25,s:700},{t:999,s:400}];
-const GAS_SPD    = [{t:20,s:800},{t:25,s:650},{t:30,s:550},{t:40,s:420},{t:50,s:320},{t:60,s:250},{t:80,s:190},{t:100,s:150},{t:999,s:110}];
+// ESAB Combirex DX — plasmahastigheter (mm/min) ur er Offertkalkyl Mall
+const PLASMA_SPD = [
+  {t:1,s:9000},{t:2,s:7500},{t:3,s:5000},{t:4,s:4000},{t:5,s:3500},
+  {t:6,s:3000},{t:8,s:2250},{t:10,s:1750},{t:12,s:1500},{t:15,s:1125},
+  {t:20,s:875},{t:25,s:625},{t:30,s:325},{t:999,s:200}
+];
+// ESAB COMBIJET IPQ (Propan) — ur databladet för Combirex DX
+const GAS_SPD = [
+  {t:15,s:520},{t:20,s:460},{t:25,s:420},{t:30,s:400},{t:35,s:380},
+  {t:40,s:360},{t:50,s:310},{t:60,s:340},{t:80,s:270},{t:100,s:270},
+  {t:150,s:230},{t:200,s:180},{t:250,s:130},{t:300,s:110},{t:999,s:90}
+];
 function lookupSpd(T,tbl){for(const r of tbl){if(T<=r.t)return r.s;}return tbl[tbl.length-1].s;}
 function calcCutRate(mat,T){
   const useGas=T>25&&mat!=='ALU';
@@ -436,6 +474,7 @@ const state = {
   rundstangFinish: 'ra',
   labourEnabled: false,
   marginEnabled: false,
+  grovEnabled: true,
   usdSek: 10.5,
 };
 
@@ -737,18 +776,78 @@ function displayTitle(d) {
 
 function calculate() {
   const d   = getDims();
+  const QTY = d.QTY || 1;
+  const resultArea = document.getElementById('resultArea');
   const P_base = parseFloat(document.getElementById('kgprice').value) || 0;
   const finishMult = (state.type === 'rundstang')
     ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
     : 1.0;
   const P = P_base * finishMult;
   const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
-  const QTY = d.QTY || 1;
-  const area = document.getElementById('resultArea');
+
+  // ---- GROVBERÄKNING ----
+  if (state.grovEnabled) {
+    if (!dimsValid(d) || !P) {
+      resultArea.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
+      document.getElementById('addToListBtn').classList.add('disabled');
+      document.getElementById('marginPreview').textContent = '— kr';
+      document.getElementById('labourCutVal').textContent  = '— kr';
+      document.getElementById('labourBreakdown').innerHTML = '';
+      return;
+    }
+    const matMup  = (parseFloat(document.getElementById('grovMatMarkup').value)  || 0) / 100;
+    const prodMup = (parseFloat(document.getElementById('grovProdMarkup').value) || 0) / 100;
+    const volM3g  = calcVolume(d);
+    const wKg     = volM3g * state.density;
+    const matCostG = wKg * P;
+    const t15      = matCostG * (1 + matMup);
+    const sellStG  = t15 * (1 + prodMup);
+    const sellTotG = sellStG * QTY;
+    const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    function gRow(label, value, cls, tip) {
+      const ta = tip ? ` class="tt" data-tip="${tip.replace(/"/g,'&quot;')}"` : '';
+      return `<div class="result-row"${ta}><span class="result-label">${label}</span><span class="result-value${cls?' '+cls:''}">${value}</span></div>`;
+    }
+    let gRows = '';
+    gRows += gRow('Vikt / st', `${fmt(wKg)} kg`, '',
+      `${dimString(d)}
+× ${state.density.toLocaleString('sv-SE')} kg/m³
+= ${fmt(wKg)} kg`);
+    gRows += gRow('Material / st', `${fmt(matCostG)} kr`, '',
+      `${fmt(wKg)} kg × ${fmt(P)} kr/kg
+= ${fmt(matCostG)} kr`);
+    gRows += gRow(`Mat.påslag ${(matMup*100).toFixed(0)}%`, `${fmt(t15)} kr`, 'cut',
+      `${fmt(matCostG)} × (1 + ${(matMup*100).toFixed(0)}%)
+= ${fmt(t15)} kr`);
+    gRows += gRow(`Prod.påslag ${(prodMup*100).toFixed(0)}%`, `${fmt(sellStG)} kr/st`, 'sell',
+      `${fmt(t15)} × (1 + ${(prodMup*100).toFixed(0)}%)
+= ${fmt(sellStG)} kr/st`);
+    if (QTY > 1) gRows += gRow('Antal · tot vikt', `${QTY} st · ${fmt(wKg*QTY)} kg`, '',
+      `${QTY} st × ${fmt(wKg)} kg = ${fmt(wKg*QTY)} kg`);
+
+    resultArea.innerHTML = `<div class="result-card">
+      <div class="card-title" style="margin-bottom:12px;">
+        GROV · ${displayTitle(d)}
+      </div>
+      ${gRows}
+      <div class="result-total">
+        <span class="rt-label">${QTY>1?'TOTALT':'PRIS'}</span>
+        <span class="rt-price">${fmt(sellTotG)}<span class="rt-currency">kr</span></span>
+      </div>
+    </div>`;
+
+    document.getElementById('addToListBtn').classList.remove('disabled');
+    document.getElementById('marginPreview').textContent = '— kr';
+    document.getElementById('labourCutVal').textContent  = '— kr';
+    document.getElementById('labourBreakdown').innerHTML = '';
+    return;
+  }
+  // ---- SLUT GROVBERÄKNING ----
   const fmt  = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
   if (!dimsValid(d) || !P) {
-    area.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
+    resultArea.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
     document.getElementById('addToListBtn').classList.add('disabled');
     document.getElementById('marginPreview').textContent = '— kr';
     document.getElementById('labourCutVal').textContent  = '— kr';
@@ -894,7 +993,7 @@ function calculate() {
 
   const totalLabel = (state.marginEnabled&&MRG>0) ? (QTY>1?'FÖRSÄLJNING TOT':'FÖRSÄLJNINGSPRIS') : (QTY>1?'TOTALT':'PRIS');
 
-  area.innerHTML = `<div class="result-card">
+  resultArea.innerHTML = `<div class="result-card">
     <div class="card-title" style="margin-bottom:12px;">${state.mat} — ${dimString(d)}</div>
     ${rows}
     <div class="result-total">
@@ -935,6 +1034,37 @@ function setupToggles() {
     calculate();
   });
 
+
+  // ---- GROVBERÄKNING TOGGLE ----
+  (function() {
+    // Default: on
+    state.grovEnabled = true;
+    syncGrovMode();
+  })();
+
+  document.getElementById('grovToggleRow').addEventListener('click', () => {
+    state.grovEnabled = !state.grovEnabled;
+    document.getElementById('grovToggle').classList.toggle('on', state.grovEnabled);
+    syncGrovMode();
+    calculate();
+  });
+
+  function syncGrovMode() {
+    const g = state.grovEnabled;
+    // Dim/enable the cut, labour and margin cards
+    ['cutCard'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
+    });
+    ['labourToggleRow','marginToggleRow'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
+    });
+    document.getElementById('grovToggleSub').textContent = g
+      ? 'Snabbt styckpris — material × påslag × produktpåslag'
+      : 'Detaljerad kalkyl — skärning, personal och marginal aktiveras';
+  }
+
   document.getElementById('marginToggleRow').addEventListener('click', () => {
     state.marginEnabled = !state.marginEnabled;
     document.getElementById('marginToggle').classList.toggle('on', state.marginEnabled);
@@ -947,7 +1077,7 @@ function setupToggles() {
 // INPUTS
 // ================================================================
 function setupInputListeners() {
-  ['kgprice','cutRate','labourRate','setupTime','camTime','handleTime','marginPct'].forEach(id => {
+  ['kgprice','cutRate','labourRate','setupTime','camTime','handleTime','marginPct','grovMatMarkup','grovProdMarkup'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', calculate);
   });
@@ -960,15 +1090,45 @@ function setupInputListeners() {
 const quoteList = [];
 
 function addToList() {
-  const d   = getDims();
-  const P_base = parseFloat(document.getElementById('kgprice').value) || 0;
+  const d       = getDims();
+  const P_baseA = parseFloat(document.getElementById('kgprice').value) || 0;
   const finishMult = (state.type === 'rundstang')
     ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
     : 1.0;
-  const P = P_base * finishMult;
-  if (!dimsValid(d) || !P) return;
-  const QTY = d.QTY || 1;
+  const P = P_baseA * finishMult;
+  if (!dimsValid(d) || !P_baseA) return;
 
+  // Grovberäkning
+  if (state.grovEnabled) {
+    const matMupA  = (parseFloat(document.getElementById('grovMatMarkup').value)  || 0) / 100;
+    const prodMupA = (parseFloat(document.getElementById('grovProdMarkup').value) || 0) / 100;
+    const wKgA     = calcVolume(d) * state.density;
+    const sellA    = wKgA * P * (1 + matMupA) * (1 + prodMupA);
+    const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
+    quoteList.push({
+      id: Date.now(), title: displayTitle(d),
+      sub: typeLabel + ' · Grov', qty: QTY,
+      pricePerSt: sellA, weightPerSt: wKgA,
+      snap: {
+        type:state.type, mat:state.mat, density:state.density, d, P:P_baseA,
+        finish:state.rundstangFinish, grovEnabled:true,
+        grovMatMarkup:document.getElementById('grovMatMarkup').value,
+        grovProdMarkup:document.getElementById('grovProdMarkup').value,
+        cutEnabled:false, cutLength:'', cutRate:'45', cutRateUserEdited:false,
+        labourEnabled:false, labourRate:'450', setupTime:'10', camTime:'5', handleTime:'3',
+        marginEnabled:false, marginPct:'25',
+      }
+    });
+    renderList();
+    DIM_FIELDS[state.type].forEach(f=>{const el=document.getElementById(f.id);if(el)el.value=f.val||'';});
+    document.getElementById('kgprice').value='';
+    document.getElementById('addToListBtn').classList.add('disabled');
+    document.getElementById('resultArea').innerHTML='<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
+    const bA=document.getElementById('addToListBtn');
+    bA.innerHTML='✓ TILLAGD';
+    setTimeout(()=>{bA.innerHTML='<span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA';},900);
+    return;
+  }
   const volM3 = calcVolume(d);
   const weightKg = volM3 * state.density;
   const matCost = weightKg * P;
@@ -1026,7 +1186,7 @@ function addToList() {
     pricePerSt: sellPerSt,
     weightPerSt: weightKg,
     snap: {
-      type:state.type, mat:state.mat, density:state.density, d, P:P_base, finish:state.rundstangFinish,
+      type:state.type, mat:state.mat, density:state.density, d, P:P_baseA, finish:state.rundstangFinish,
       cutEnabled:state.cutEnabled, cutLength:document.getElementById('cutLength').value,
       cutRate:document.getElementById('cutRate').value, cutRateUserEdited:state.cutRateUserEdited,
       labourEnabled:state.labourEnabled,
@@ -1113,6 +1273,12 @@ function restoreFromList(id) {
   // Material
   setTimeout(() => {
     document.querySelectorAll('#matGrid .mat-btn').forEach(b=>b.classList.toggle('active', b.dataset.mat===s.mat));
+    // Grovberäkning-läge
+    state.grovEnabled = !!s.grovEnabled;
+    document.getElementById('grovToggle').classList.toggle('on', state.grovEnabled);
+    if (s.grovMatMarkup) document.getElementById('grovMatMarkup').value = s.grovMatMarkup;
+    if (s.grovProdMarkup) document.getElementById('grovProdMarkup').value = s.grovProdMarkup;
+    syncGrovMode();
     state.mat = s.mat; state.density = s.density;
     if (s.type === 'rundstang' && s.finish) {
       state.rundstangFinish = s.finish;

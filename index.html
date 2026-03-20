@@ -352,6 +352,58 @@ body.light .input-wrap select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a6080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
+
+/* MOBILE OVERFLOW FIXES */
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  main { overflow-x: hidden; padding: 12px; gap: 12px; }
+
+  /* Prevent any card from overflowing */
+  .card { overflow: hidden; width: 100%; box-sizing: border-box; }
+  #matCard { overflow: visible; }
+
+  /* Material grid — ensure 3 cols fit */
+  .mat-grid { overflow: hidden; width: 100%; }
+  .mat-btn {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    padding: 12px 4px;
+    font-size:.9rem;
+  }
+  .mat-btn .mat-sub {
+    font-size:.58rem;
+    letter-spacing:.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Type buttons */
+  .type-btn { padding: 12px 4px; font-size:.9rem; }
+  .type-btn .type-sub { font-size:.58rem; letter-spacing:.5px; }
+
+  /* Fix input labels — no wrap, smaller */
+  .input-wrap label {
+    font-size:.68rem;
+    letter-spacing:.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+
+  /* Inputs slightly smaller */
+  .input-wrap input, .input-wrap select {
+    font-size:1rem;
+    padding:10px 8px;
+  }
+
+  /* Tighter gaps in dim grids */
+  .dim-row { gap: 6px; }
+  .dim-4 { grid-template-columns: repeat(4,1fr); gap:5px; }
+}
+
 </style>
 </head>
 <body>
@@ -784,41 +836,41 @@ const RUNDSTANG_FINISH = [
 // type: number|select, id, label, placeholder, unit
 const DIM_FIELDS = {
   plat: [
-    {id:'f_length',  label:'Längd mm',    ph:'2000'},
-    {id:'f_width',   label:'Bredd mm',    ph:'1000'},
-    {id:'f_thick',   label:'Tj. mm', ph:'5', step:'0.1'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_length',  label:'Längd',    ph:'2000'},
+    {id:'f_width',   label:'Bredd',    ph:'1000'},
+    {id:'f_thick',   label:'Tj.', ph:'5', step:'0.1'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
   ror: [
     {id:'f_od',      label:'Ytterdia', ph:'60.3'},
-    {id:'f_wt',      label:'Gods mm', ph:'4', step:'0.1'},
-    {id:'f_length',  label:'Längd mm',    ph:'1000'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_wt',      label:'Gods', ph:'4', step:'0.1'},
+    {id:'f_length',  label:'Längd',    ph:'1000'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
   plattjarn: [
-    {id:'f_width',   label:'Bredd mm',    ph:'50'},
-    {id:'f_thick',   label:'Tj. mm', ph:'10'},
-    {id:'f_length',  label:'Längd mm',    ph:'3000'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_width',   label:'Bredd',    ph:'50'},
+    {id:'f_thick',   label:'Tj.', ph:'10'},
+    {id:'f_length',  label:'Längd',    ph:'3000'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
   rundstang: [
-    {id:'f_dia',     label:'Dia mm', ph:'30'},
-    {id:'f_length',  label:'Längd mm',    ph:'3000'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_dia',     label:'Dia', ph:'30'},
+    {id:'f_length',  label:'Längd',    ph:'3000'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
   vinkeljarn: [
-    {id:'f_a',       label:'Ben A mm',    ph:'50'},
-    {id:'f_b',       label:'Ben B mm',    ph:'50'},
-    {id:'f_thick',   label:'Gods mm', ph:'5'},
-    {id:'f_length',  label:'Längd mm',    ph:'3000'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_a',       label:'Ben A',    ph:'50'},
+    {id:'f_b',       label:'Ben B',    ph:'50'},
+    {id:'f_thick',   label:'Gods', ph:'5'},
+    {id:'f_length',  label:'Längd',    ph:'3000'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
   vkr: [
-    {id:'f_w',       label:'Bredd mm',    ph:'60'},
-    {id:'f_h',       label:'Höjd mm',     ph:'40'},
-    {id:'f_thick',   label:'Gods mm', ph:'4', step:'0.5'},
-    {id:'f_length',  label:'Längd mm',    ph:'3000'},
-    {id:'f_qty',     label:'Antal st',    ph:'1', val:'1'},
+    {id:'f_w',       label:'Bredd',    ph:'60'},
+    {id:'f_h',       label:'Höjd',     ph:'40'},
+    {id:'f_thick',   label:'Gods', ph:'4', step:'0.5'},
+    {id:'f_length',  label:'Längd',    ph:'3000'},
+    {id:'f_qty',     label:'Antal',    ph:'1', val:'1'},
   ],
 };
 

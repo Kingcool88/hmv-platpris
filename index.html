@@ -1218,14 +1218,21 @@ function displayTitle(d) {
 }
 
 function calculate() {
-  // Auto-advance wizard step 3→4 on desktop when dims+price are valid
+  // Auto-advance wizard step 3→4 — debounced so user finishes typing first
   if (isDesktop && isDesktop()) {
-    const _d = getDims(), _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
     const step3 = document.getElementById('wizStep3');
-    if (step3 && step3.classList.contains('active') && dimsValid(_d) && _P > 0) {
-      wizUpdateSummary && wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
-      wizAdvance && wizAdvance(3);
-      wizSetState && wizSetState(4, 'active');
+    if (step3 && step3.classList.contains('active')) {
+      clearTimeout(window._wizStep3Timer);
+      window._wizStep3Timer = setTimeout(() => {
+        const _d = getDims();
+        const _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
+        // Only advance if price looks complete (>0 and user not mid-typing)
+        if (dimsValid(_d) && _P >= 1) {
+          wizUpdateSummary && wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
+          wizAdvance && wizAdvance(3);
+          wizSetState && wizSetState(4, 'active');
+        }
+      }, 1200); // 1.2 sekunder efter senaste knapptryckning
     }
   }
   const d   = getDims();

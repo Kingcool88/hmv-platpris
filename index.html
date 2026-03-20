@@ -178,6 +178,180 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
 .explain-result.cut{color:var(--accent3);}
 .explain-result.labour{color:#c792ea;}
 .explain-result.green{color:var(--green);}
+
+/* ================================================================
+   WIZARD / DESKTOP LAYOUT  (≥768px)
+   ================================================================ */
+@media (min-width: 768px) {
+
+  body { overflow-x: hidden; }
+
+  /* Two-column layout: left=wizard, right=result */
+  main {
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 460px;
+    grid-template-rows: auto;
+    gap: 0;
+    padding: 0;
+    align-items: start;
+  }
+
+  .wizard-left {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 24px 20px 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: sticky;
+    top: 72px;
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+  }
+
+  .wizard-right {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 24px 20px 30px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-left: 1px solid var(--border);
+    min-height: calc(100dvh - 80px);
+    background: var(--surface);
+  }
+
+  /* Horizontal step progress bar */
+  .wizard-steps-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+
+  .wizard-step-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+  .wizard-step-tab .wst-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .8rem; font-weight: 700;
+    line-height: 22px; text-align: center;
+    flex-shrink: 0; transition: all .2s;
+  }
+  .wizard-step-tab .wst-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .7rem; font-weight: 600;
+    letter-spacing: 2px; color: var(--muted);
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .wizard-step-connector {
+    flex: 1; height: 2px;
+    background: var(--border);
+    min-width: 12px;
+    transition: background .3s;
+  }
+
+  /* Tab states */
+  .wizard-step-tab.active .wst-num { background: rgba(240,165,0,.2); border-color: var(--accent); color: var(--accent); }
+  .wizard-step-tab.active .wst-label { color: var(--accent); }
+  .wizard-step-tab.done .wst-num { background: rgba(46,204,113,.15); border-color: var(--green); color: var(--green); }
+  .wizard-step-tab.done .wst-num::after { content: '✓'; }
+  .wizard-step-tab.done .wst-label { color: var(--green); }
+  .wizard-step-tab.locked { opacity: .4; }  /* tabs always clickable */
+  .wizard-step-connector.done { background: var(--green); opacity: .5; }
+  .wizard-step-connector.active { background: var(--accent); opacity: .4; }
+
+  /* Step panels — only active is visible, done/locked hidden */
+  .wizard-step { margin-bottom: 0; }
+  .wizard-step .step-body { display: none; }
+  .wizard-step.active .step-body { display: block; }
+  .wizard-step .step-full { display: block; }
+  .wizard-step .step-summary { display: none; }
+
+  /* Locked content overlay */
+  .wizard-step.locked .card,
+  .wizard-step.locked > div { opacity: .35; pointer-events: none; user-select: none; }
+
+  /* Next step button */
+  .wizard-next-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .wizard-next-btn button {
+    background: linear-gradient(135deg, rgba(240,165,0,.2), rgba(240,165,0,.05));
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .9rem; font-weight: 700;
+    letter-spacing: 2px; padding: 10px 20px;
+    cursor: pointer; transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wizard-next-btn button:active { opacity: .7; }
+  .wizard-next-btn button:disabled { opacity: .3; pointer-events: none; }
+
+  .wizard-left .card { margin-bottom: 0; }
+  .wizard-left .section-label { padding-top: 2px; }
+}
+
+/* Mobile: hide wizard wrappers, show normal layout */
+@media (max-width: 767px) {
+  .wizard-left, .wizard-right { display: contents; }
+  .wizard-step { display: contents; }
+  .step-body { display: contents !important; }
+  .step-summary { display: none !important; }
+  .step-full { display: contents !important; }
+  .wizard-step::before, .wizard-step::after { display: none; }
+  .wizard-steps-bar { display: none !important; }
+  .wizard-next-btn { display: none !important; }
+}
+
+
+/* CUSTOM SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: var(--border) var(--bg); }
+
+/* Wizard left panel scrollbar */
+.wizard-left::-webkit-scrollbar { width: 4px; }
+.wizard-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+
+/* SELECT DROPDOWN */
+.input-wrap select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237880a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+body.light .input-wrap select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a6080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+}
+
 </style>
 </head>
 <body>
@@ -187,7 +361,35 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><span id="themeIcon">☀</span></button>
 </header>
 <main>
+  <div class="wizard-left">
+    <!-- Horisontell stegindikator (desktop) -->
+    <div class="wizard-steps-bar" id="wizStepsBar">
+      <div class="wizard-step-tab active" id="wizTab1" onclick="editStep(1)">
+        <div class="wst-num" id="wizTabNum1">1</div>
+        <div class="wst-label">Typ</div>
+      </div>
+      <div class="wizard-step-connector" id="wizConn1"></div>
+      <div class="wizard-step-tab locked" id="wizTab2" onclick="editStep(2)">
+        <div class="wst-num" id="wizTabNum2">2</div>
+        <div class="wst-label">Material</div>
+      </div>
+      <div class="wizard-step-connector" id="wizConn2"></div>
+      <div class="wizard-step-tab locked" id="wizTab3" onclick="editStep(3)">
+        <div class="wst-num" id="wizTabNum3">3</div>
+        <div class="wst-label">Mått &amp; Pris</div>
+      </div>
+      <div class="wizard-step-connector" id="wizConn3"></div>
+      <div class="wizard-step-tab locked" id="wizTab4" onclick="editStep(4)">
+        <div class="wst-num" id="wizTabNum4">4</div>
+        <div class="wst-label">Alternativ</div>
+      </div>
+    </div>
 
+
+  <div class="wizard-step active" data-step="1" id="wizStep1">
+    <div class="step-body">
+      <div class="step-summary" onclick="editStep(1)"><span id="wizSum1"></span><span class="ss-edit">ÄNDRA ▶</span></div>
+      <div class="step-full">
   <!-- STEG 1: PRODUKTTYP -->
   <div>
     <div class="section-label">Produkttyp</div>
@@ -201,12 +403,38 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
     </div>
   </div>
 
+
+
+      <div class="wizard-next-btn">
+        <button id="wizNextBtn1" onclick="wizGoNext(1)">NÄSTA →</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-step locked" data-step="2" id="wizStep2">
+    <div class="step-body">
+      <div class="step-summary" onclick="editStep(2)"><span id="wizSum2"></span><span class="ss-edit">ÄNDRA ▶</span></div>
+      <div class="step-full">
   <!-- STEG 2: MATERIAL -->
   <div class="card" id="matCard">
     <div class="card-title">Material</div>
     <div class="mat-grid" id="matGrid"></div>
   </div>
 
+
+
+      <div class="wizard-next-btn">
+        <button id="wizNextBtn2" onclick="wizGoNext(2)">NÄSTA →</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-step locked" data-step="3" id="wizStep3">
+    <div class="step-body">
+      <div class="step-summary" onclick="editStep(3)"><span id="wizSum3"></span><span class="ss-edit">ÄNDRA ▶</span></div>
+      <div class="step-full">
   <!-- STEG 3: DIMENSIONER -->
   <div class="card" id="dimCard">
     <div class="card-title" id="dimTitle">Dimensioner</div>
@@ -225,10 +453,23 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
         <div class="dot manual" id="sourceDot"></div>
         <span id="sourceText">Ange pris manuellt</span>
         <button class="fetch-btn" id="fetchBtn" onclick="fetchPrice()">↓ HÄMTA PRIS</button>
+
+      <div class="wizard-next-btn">
+        <button id="wizNextBtn3" onclick="wizGoNext(3)">BERÄKNA →</button>
+      </div>
       </div>
     </div>
   </div>
 
+
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-step locked" data-step="4" id="wizStep4">
+    <div class="step-body">
+      <div class="step-summary" onclick="editStep(4)"><span id="wizSum4"></span><span class="ss-edit">ÄNDRA ▶</span></div>
+      <div class="step-full">
   <!-- GROVBERÄKNING -->
   <div class="card" id="grovCard">
     <div class="card-title">Beräkningsmetod</div>
@@ -259,7 +500,7 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
 
   <!-- SKÄRNING / SÅGNING -->
   <div class="card" id="cutCard">
-    <div class="card-title" id="cutCardTitle">Skär/sågkostnad</div>
+    <div class="card-title" id="cutCardTitle">Skärkostnad</div>
     <div class="toggle-row" id="cutToggleRow">
       <div class="toggle" id="cutToggle"></div>
       <div>
@@ -326,6 +567,17 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
     </div>
   </div>
 
+      </div>
+    </div>
+  </div>
+
+
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="wizard-right">
   <!-- RESULTAT -->
   <div id="resultArea"><div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div></div>
 
@@ -371,7 +623,7 @@ main{flex:1;padding:16px;max-width:480px;width:100%;margin:0 auto;display:flex;f
       </div>
     </div>
   </div>
-
+  </div>
 </main>
 <script>
 
@@ -622,6 +874,7 @@ const state = {
 function init() {
   renderTypeGrid();
   switchType('plat');
+  syncGrovMode();
   setupToggles();
   setupInputListeners();
   applyTheme();
@@ -913,6 +1166,16 @@ function displayTitle(d) {
 }
 
 function calculate() {
+  // Auto-advance wizard step 3→4 on desktop when dims+price are valid
+  if (isDesktop && isDesktop()) {
+    const _d = getDims(), _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
+    const step3 = document.getElementById('wizStep3');
+    if (step3 && step3.classList.contains('active') && dimsValid(_d) && _P > 0) {
+      wizUpdateSummary && wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
+      wizAdvance && wizAdvance(3);
+      wizSetState && wizSetState(4, 'active');
+    }
+  }
   const d   = getDims();
   const QTY = d.QTY || 1;
   const resultArea = document.getElementById('resultArea');
@@ -1190,6 +1453,18 @@ function calculate() {
 // ================================================================
 // TOGGLES
 // ================================================================
+function syncGrovMode() {
+  const g = state.grovEnabled;
+  ['cutCard','labourToggleRow','marginToggleRow'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
+  });
+  const sub = document.getElementById('grovToggleSub');
+  if (sub) sub.textContent = g
+    ? 'Snabbt styckpris — material × påslag × produktpåslag'
+    : 'Detaljerad kalkyl — skärning, personal och marginal aktiveras';
+}
+
 function setupToggles() {
   document.getElementById('cutToggleRow').addEventListener('click', () => {
     state.cutEnabled = !state.cutEnabled;
@@ -1219,9 +1494,8 @@ function setupToggles() {
 
   // ---- GROVBERÄKNING TOGGLE ----
   (function() {
-    // Default: on
     state.grovEnabled = true;
-    syncGrovMode();
+    // syncGrovMode called after DOM ready in init()
   })();
 
   document.getElementById('grovToggleRow').addEventListener('click', () => {
@@ -1231,21 +1505,6 @@ function setupToggles() {
     calculate();
   });
 
-  function syncGrovMode() {
-    const g = state.grovEnabled;
-    // Dim/enable the cut, labour and margin cards
-    ['cutCard'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
-    });
-    ['labourToggleRow','marginToggleRow'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
-    });
-    document.getElementById('grovToggleSub').textContent = g
-      ? 'Snabbt styckpris — material × påslag × produktpåslag'
-      : 'Detaljerad kalkyl — skärning, personal och marginal aktiveras';
-  }
 
   document.getElementById('marginToggleRow').addEventListener('click', () => {
     state.marginEnabled = !state.marginEnabled;
@@ -1661,10 +1920,168 @@ document.addEventListener('click',e=>{if(!e.target.closest('.tt'))document.query
 function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeIcon').textContent=l?'🌙':'☀';localStorage.setItem('hmv_theme',l?'light':'dark');}
 function applyTheme(){if(localStorage.getItem('hmv_theme')==='light'){document.body.classList.add('light');const i=document.getElementById('themeIcon');if(i)i.textContent='🌙';}}
 
+
+// ================================================================
+// WIZARD STEG-LOGIK (desktop ≥768px)
+// ================================================================
+const WIZARD_STEPS = 4;
+
+function isDesktop() { return window.innerWidth >= 768; }
+
+function wizSetState(stepNum, st) {
+  // Panel
+  const el = document.getElementById('wizStep' + stepNum);
+  if (el) { el.classList.remove('active','done','locked'); el.classList.add(st); }
+  // Tab
+  const tab = document.getElementById('wizTab' + stepNum);
+  const num = document.getElementById('wizTabNum' + stepNum);
+  if (tab) { tab.classList.remove('active','done','locked'); tab.classList.add(st); }
+  if (num) { num.textContent = st === 'done' ? '✓' : String(stepNum); }
+  // Connector before this step
+  const conn = document.getElementById('wizConn' + (stepNum-1));
+  if (conn) {
+    conn.classList.remove('done','active');
+    if (st === 'done') conn.classList.add('done');
+    else if (st === 'active') conn.classList.add('active');
+  }
+}
+
+function wizUpdateSummary(stepNum, text) {
+  const el = document.getElementById('wizSum' + stepNum);
+  if (el) el.textContent = text;
+}
+
+function editStep(stepNum) {
+  if (!isDesktop()) return;
+  wizSetState(stepNum, 'active');
+  // Mark previous steps as done, keep later steps locked
+  for (let i = 1; i < stepNum; i++) {
+    const el = document.getElementById('wizStep' + i);
+    if (el && !el.classList.contains('locked')) wizSetState(i, 'done');
+  }
+  for (let i = stepNum+1; i <= WIZARD_STEPS; i++) {
+    const el = document.getElementById('wizStep' + i);
+    // Only lock if it was already locked (don't re-lock steps user has visited)
+    if (el && el.classList.contains('locked')) wizSetState(i, 'locked');
+  }
+}
+
+function wizAdvance(fromStep) {
+  if (!isDesktop()) return;
+  wizSetState(fromStep, 'done');
+  if (fromStep < WIZARD_STEPS) wizSetState(fromStep+1, 'active');
+}
+
+function wizGoNext(fromStep) {
+  if (!isDesktop()) return;
+  // Validate before advancing
+  if (fromStep === 1) {
+    // Type is always selected
+    const active = document.querySelector('.type-btn.active');
+    const labels = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'};
+    wizUpdateSummary(1, active ? labels[active.dataset.type] : state.type);
+    wizAdvance(1);
+  } else if (fromStep === 2) {
+    wizUpdateSummary(2, state.mat);
+    wizAdvance(2);
+  } else if (fromStep === 3) {
+    const d = getDims();
+    const P = parseFloat(document.getElementById('kgprice').value) || 0;
+    if (!dimsValid(d) || !P) {
+      const btn = document.getElementById('wizNextBtn3');
+      if (btn) { btn.style.borderColor='var(--accent2)'; btn.style.color='var(--accent2)'; setTimeout(()=>{btn.style.borderColor='';btn.style.color='';},600); }
+      return;
+    }
+    wizUpdateSummary(3, dimString(d));
+    wizAdvance(3);
+    // Step 4 (alternativ) is always accessible — show it as active, not locked
+    wizSetState(4, 'active');
+  }
+}
+
+// Hook into type selection → advance to step 2
+const origTypeGrid = document.getElementById('typeGrid');
+if (origTypeGrid) {
+  origTypeGrid.addEventListener('click', () => {
+    if (!isDesktop() || !document.getElementById('wizStep1')) return;
+    setTimeout(() => {
+      const active = origTypeGrid.querySelector('.type-btn.active');
+      const labels = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'};
+      if (active) {
+        wizUpdateSummary(1, labels[active.dataset.type] || active.dataset.type);
+        wizAdvance(1);
+      }
+    }, 30);
+  });
+}
+
+// Hook into material selection → advance to step 3
+document.getElementById('matCard').addEventListener('click', e => {
+  if (!isDesktop()) return;
+  const btn = e.target.closest('.mat-btn');
+  if (!btn || btn.closest('#finishGrid')) return;
+  setTimeout(() => {
+    const finish = state.rundstangFinish
+      ? (RUNDSTANG_FINISH.find(f=>f.key===state.rundstangFinish)?.label || '')
+      : '';
+    wizUpdateSummary(2, state.mat + (finish ? ' · ' + finish : ''));
+    wizAdvance(2);
+  }, 30);
+});
+
+// Hook into kgprice input → advance to step 4 when dims + price filled
+function wizCheckStep3() {
+  if (!isDesktop() || !document.getElementById('wizStep3')) return;
+  const d = getDims();
+  const P = parseFloat(document.getElementById('kgprice').value) || 0;
+  if (dimsValid(d) && P > 0) {
+    const step3 = document.getElementById('wizStep3');
+    if (step3 && step3.classList.contains('active')) {
+      wizUpdateSummary(3, dimString(d) + ' · ' + P.toLocaleString('sv-SE') + ' kr/kg');
+      wizAdvance(3);
+    }
+  }
+}
+
+document.getElementById('kgprice').addEventListener('input', wizCheckStep3);
+// Also check on dim field changes
+['f_length','f_width','f_thick','f_qty','f_od','f_wt','f_dia','f_a','f_b','f_h','f_w'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', wizCheckStep3);
+});
+
+// Step 4 is always accessible once step 3 is done — no auto-advance needed
+// (it's the options/settings step)
+
+// On resize: reset wizard state if going from mobile to desktop
+let lastWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  if (lastWidth < 768 && w >= 768) {
+    if (document.getElementById('wizStep1')) {
+      wizSetState(1, 'active');
+      for (let i=2; i<=WIZARD_STEPS; i++) wizSetState(i,'locked');
+    }
+  }
+  lastWidth = w;
+});
+
+// Init on load — defer until DOM is fully ready
+function wizInit() {
+  if (!isDesktop()) return;
+  if (!document.getElementById('wizStep1')) return;
+  wizSetState(1, 'active');
+  for (let i=2; i<=WIZARD_STEPS; i++) wizSetState(i,'locked');
+}
+// Run after init() so all elements exist
+
+
+
 // ================================================================
 // START
 // ================================================================
 init();
+wizInit();
 </script>
 </body>
 </html>

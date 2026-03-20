@@ -1218,23 +1218,7 @@ function displayTitle(d) {
 }
 
 function calculate() {
-  // Auto-advance wizard step 3→4 — debounced so user finishes typing first
-  if (isDesktop && isDesktop()) {
-    const step3 = document.getElementById('wizStep3');
-    if (step3 && step3.classList.contains('active')) {
-      clearTimeout(window._wizStep3Timer);
-      window._wizStep3Timer = setTimeout(() => {
-        const _d = getDims();
-        const _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
-        // Only advance if price looks complete (>0 and user not mid-typing)
-        if (dimsValid(_d) && _P >= 1) {
-          wizUpdateSummary && wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
-          wizAdvance && wizAdvance(3);
-          wizSetState && wizSetState(4, 'active');
-        }
-      }, 1200); // 1.2 sekunder efter senaste knapptryckning
-    }
-  }
+  // Wizard step 3→4 advance is handled via kgprice 'blur' event — see setupInputListeners()
   const d   = getDims();
   const QTY = d.QTY || 1;
   const resultArea = document.getElementById('resultArea');
@@ -1613,6 +1597,25 @@ function setupInputListeners() {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', calculate);
   });
+
+  // Wizard step 3→4: advance only when user finishes entering price (blur or Enter)
+  function wizTryAdvanceStep3() {
+    if (!isDesktop || !isDesktop()) return;
+    const step3 = document.getElementById('wizStep3');
+    if (!step3 || !step3.classList.contains('active')) return;
+    const _d = getDims();
+    const _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
+    if (dimsValid(_d) && _P >= 1) {
+      wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
+      wizAdvance(3);
+      wizSetState(4, 'active');
+    }
+  }
+  const kgEl = document.getElementById('kgprice');
+  if (kgEl) {
+    kgEl.addEventListener('blur',  wizTryAdvanceStep3);
+    kgEl.addEventListener('keydown', e => { if (e.key === 'Enter') wizTryAdvanceStep3(); });
+  }
   document.getElementById('cutRate').addEventListener('input', () => { state.cutRateUserEdited = true; });
 }
 
@@ -1990,6 +1993,7 @@ async function fetchPrice() {
     calculate();
   }
   btn.innerHTML='↓ HÄMTA PRIS'; btn.disabled=false;
+  if (typeof wizTryAdvanceStep3 === 'function') wizTryAdvanceStep3();
 }
 async function getUSDSEK() {
   try{const r=await fetch('https://open.er-api.com/v6/latest/USD',{signal:AbortSignal.timeout(4000)}); if(r.ok){const d=await r.json(); state.usdSek=d.rates?.SEK||10.5; return state.usdSek;}}catch{}
@@ -2120,26 +2124,6 @@ document.getElementById('matCard').addEventListener('click', e => {
   }, 30);
 });
 
-// Hook into kgprice input → advance to step 4 when dims + price filled
-function wizCheckStep3() {
-  if (!isDesktop() || !document.getElementById('wizStep3')) return;
-  const d = getDims();
-  const P = parseFloat(document.getElementById('kgprice').value) || 0;
-  if (dimsValid(d) && P > 0) {
-    const step3 = document.getElementById('wizStep3');
-    if (step3 && step3.classList.contains('active')) {
-      wizUpdateSummary(3, dimString(d) + ' · ' + P.toLocaleString('sv-SE') + ' kr/kg');
-      wizAdvance(3);
-    }
-  }
-}
-
-document.getElementById('kgprice').addEventListener('input', wizCheckStep3);
-// Also check on dim field changes
-['f_length','f_width','f_thick','f_qty','f_od','f_wt','f_dia','f_a','f_b','f_h','f_w'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', wizCheckStep3);
-});
 
 // Step 4 is always accessible once step 3 is done — no auto-advance needed
 // (it's the options/settings step)

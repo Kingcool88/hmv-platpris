@@ -404,6 +404,159 @@ body.light .input-wrap select {
   .dim-4 { grid-template-columns: repeat(4,1fr); gap:5px; }
 }
 
+
+  /* STOCK INFO */
+  .stock-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: .75rem;
+    color: var(--muted);
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stock-info-row:last-child { border-bottom: none; }
+  .stock-info-row span:last-child {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .stock-info-row span:last-child.warn { color: var(--accent2); }
+  .stock-note {
+    font-size: .65rem;
+    color: var(--muted);
+    letter-spacing: .5px;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .plate-size-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .plate-size-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Roboto Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: .5px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.3;
+  }
+  .plate-size-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(240,165,0,.1);
+  }
+  .plate-size-btn:active { transform: scale(.95); }
+  @media (max-width: 767px) {
+    .plate-size-grid { grid-template-columns: repeat(2,1fr); }
+  }
+
+
+/* INKÖPSLISTA */
+.purchase-btn {
+  width:100%;
+  background:none;
+  border:1.5px solid var(--accent3);
+  border-radius:var(--radius);
+  color:var(--accent3);
+  font-family:'Roboto Mono',monospace;
+  font-size:.85rem;
+  letter-spacing:1px;
+  padding:12px;
+  cursor:pointer;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.purchase-btn:active { background:rgba(79,195,247,.1); }
+.purchase-btn.visible { display:flex; }
+
+.purchase-section {
+  margin-bottom:16px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.purchase-section-title {
+  font-family:'Rajdhani',sans-serif;
+  font-size:.75rem;
+  letter-spacing:3px;
+  color:var(--muted);
+  text-transform:uppercase;
+  padding:10px 14px 6px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+}
+.purchase-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+  gap:12px;
+}
+.purchase-row:last-child { border-bottom:none; }
+.purchase-desc {
+  flex:1;
+}
+.purchase-desc .pd-title {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.05rem;
+  font-weight:600;
+  color:var(--text);
+}
+.purchase-desc .pd-sub {
+  font-size:.68rem;
+  color:var(--muted);
+  letter-spacing:.5px;
+  margin-top:2px;
+}
+.purchase-qty {
+  text-align:right;
+  flex-shrink:0;
+}
+.purchase-qty .pq-num {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.3rem;
+  font-weight:700;
+  color:var(--accent3);
+}
+.purchase-qty .pq-unit {
+  font-size:.65rem;
+  color:var(--muted);
+  letter-spacing:1px;
+}
+.purchase-note {
+  font-size:.7rem;
+  color:var(--muted);
+  letter-spacing:.5px;
+  padding:10px 14px;
+  background:var(--surface2);
+  border-top:1px solid var(--border);
+  line-height:1.6;
+}
+.purchase-empty {
+  text-align:center;
+  padding:30px;
+  color:var(--muted);
+  font-size:.8rem;
+  letter-spacing:2px;
+}
+
 </style>
 </head>
 <body>
@@ -491,6 +644,12 @@ body.light .input-wrap select {
   <div class="card" id="dimCard">
     <div class="card-title" id="dimTitle">Dimensioner</div>
     <div id="dimFields"></div>
+  </div>
+
+  <!-- LAGERLÄNGD / PLÅTSTORLEK -->
+  <div class="card" id="stockCard" style="display:none;">
+    <div class="card-title" id="stockCardTitle">Lagermaterial</div>
+    <div id="stockFields"></div>
   </div>
 
   <!-- MATERIALPRIS -->
@@ -650,6 +809,24 @@ body.light .input-wrap select {
     </div>
   </div>
 
+  <!-- INKÖPSLISTA-KNAPP -->
+  <button class="purchase-btn" id="purchaseBtn" onclick="openPurchase()">
+    📋 Visa inköpslista
+  </button>
+
+  <!-- INKÖPSLISTA MODAL -->
+  <div class="modal-overlay" id="purchaseModal" onclick="closePurchaseOnBg(event)">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <span class="modal-title">Inköpslista</span>
+        <button class="modal-close" onclick="closePurchase()">✕</button>
+      </div>
+      <div id="purchaseContent">
+        <div class="purchase-empty">Beräkna ett pris först</div>
+      </div>
+    </div>
+  </div>
+
   <!-- LÄGG TILL I LISTA -->
   <button class="add-btn disabled" id="addToListBtn" onclick="addToList()">
     <span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA
@@ -774,6 +951,378 @@ function buildExplain(lc) {
   }
 
   return html;
+}
+
+
+// ================================================================
+// LAGERMATERIAL — lagerlängd (profiler) / plåtstorlek (plåt)
+// ================================================================
+const PLATE_SIZES = [
+  {label:'2000×1000', w:2000, h:1000},
+  {label:'2500×1250', w:2500, h:1250},
+  {label:'3000×1500', w:3000, h:1500},
+  {label:'4000×2000', w:4000, h:2000},
+];
+const PLATE_EFFICIENCY = 0.72; // 72% utnyttjandegrad
+
+function renderStockCard(type) {
+  const card  = document.getElementById('stockCard');
+  const title = document.getElementById('stockCardTitle');
+  const fields= document.getElementById('stockFields');
+  if (!card) return;
+
+  if (type === 'plat') {
+    card.style.display = 'block';
+    title.textContent  = 'Plåtstorlek';
+    fields.innerHTML   = `
+      <div class="section-label" style="margin-bottom:8px;">Välj råplåtsstorlek</div>
+      <div class="plate-size-grid" id="plateSizeGrid">
+        ${PLATE_SIZES.map(ps =>
+          `<button class="plate-size-btn${ps.w===state.plateSizeW&&ps.h===state.plateSizeH?' active':''}"
+            data-w="${ps.w}" data-h="${ps.h}">${ps.label}<br><span style="font-size:.55rem;color:var(--muted);">mm</span></button>`
+        ).join('')}
+      </div>
+      <div class="stock-note" id="plateNote">Välj plåtstorlek → antal plåtar beräknas automatiskt.</div>
+    `;
+    document.getElementById('plateSizeGrid').addEventListener('click', e => {
+      const btn = e.target.closest('.plate-size-btn');
+      if (!btn) return;
+      document.querySelectorAll('.plate-size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.plateSizeW = parseInt(btn.dataset.w);
+      state.plateSizeH = parseInt(btn.dataset.h);
+      calculate();
+    });
+  } else {
+    // Profiler: visa lagerlängd-input
+    card.style.display = 'block';
+    title.textContent  = 'Lagerlängd';
+    fields.innerHTML   = `
+      <div class="dim-row dim-2">
+        <div class="input-wrap">
+          <label>Lagerlängd mm</label>
+          <input type="number" id="stockLengthInput" inputmode="numeric"
+            placeholder="6000" min="100" step="100" value="${state.stockLengthMm}">
+        </div>
+        <div class="info-badge" id="stockInfoBadge">
+          <span class="ib-label">Stänger behövs</span>
+          <span class="ib-value" id="stockBarsVal">—</span>
+        </div>
+      </div>
+      <div class="dim-row dim-2" style="margin-top:10px;">
+        <div class="input-wrap">
+          <label>Sågspån mm</label>
+          <input type="number" id="kerfInput" inputmode="decimal"
+            placeholder="3" min="0" step="0.5" value="${state.kerfMm}">
+        </div>
+        <div class="info-badge">
+          <span class="ib-label">Per snitt</span>
+          <span class="ib-value" id="kerfVal">${state.kerfMm} mm</span>
+        </div>
+      </div>
+      <div class="toggle-row" id="renkapToggleRow" style="padding:10px 0 0;">
+        <div class="toggle on" id="renkapToggle"></div>
+        <div>
+          <div class="toggle-label">Renkapning av stång</div>
+          <div class="toggle-sub">+1 snitt per stång för ren ände</div>
+        </div>
+      </div>
+      <div class="stock-note" id="stockNote">Fyll i längd → antal stänger och snitt beräknas.</div>
+    `;
+    document.getElementById('stockLengthInput').addEventListener('input', e => {
+      state.stockLengthMm = parseFloat(e.target.value) || 6000;
+      calculate();
+    });
+    document.getElementById('renkapToggleRow').addEventListener('click', () => {
+      state.renkapEnabled = state.renkapEnabled ? 0 : 1;
+      document.getElementById('renkapToggle').classList.toggle('on', !!state.renkapEnabled);
+      calculate();
+    });
+    document.getElementById('kerfInput').addEventListener('input', e => {
+      state.kerfMm = parseFloat(e.target.value) || 3;
+      const kv = document.getElementById('kerfVal');
+      if (kv) kv.textContent = state.kerfMm + ' mm';
+      calculate();
+    });
+  }
+}
+
+function calcStockBars(d) {
+  const lenMm    = d.L || 0;
+  const qty      = d.QTY || 1;
+  const stockLen = state.stockLengthMm;
+  const kerf     = state.kerfMm || 3; // sågspån mm per snitt
+  if (!lenMm || !stockLen) return { bars:0, cuts:0, piecesPerBar:0, spill:0, kerf };
+
+  // Varje bit tar lenMm + kerf utom sista biten på stången (inga renkapsnitt ännu)
+  // Effektiv stånglängd efter eventuell renkapning av ändarna
+  const renkapLen = state.renkapEnabled ? kerf : 0; // ett renkapsnitt = kerf bort från ändpunkten
+  const usableLen = stockLen - renkapLen;
+
+  // Hur många bitar ryms? Varje bit tar lenMm, varje snitt tar kerf
+  // n bitar kräver n*lenMm + (n-1)*kerf utrymme (sista biten behöver inget avslutande snitt)
+  // => n*lenMm + (n-1)*kerf <= usableLen
+  // => n*(lenMm+kerf) <= usableLen + kerf
+  // => n <= (usableLen + kerf) / (lenMm + kerf)
+  const piecesPerBar = Math.max(1, Math.floor((usableLen + kerf) / (lenMm + kerf)));
+  const bars         = Math.ceil(qty / piecesPerBar);
+
+  const fullBars  = Math.floor(qty / piecesPerBar);
+  const remainder = qty % piecesPerBar;
+
+  // Snitt: varje bit kräver ett snitt + ev renkapning per stång
+  const cutsFromFull = fullBars * (piecesPerBar + (state.renkapEnabled ? 1 : 0));
+  const cutsFromRest = remainder > 0 ? remainder + (state.renkapEnabled ? 1 : 0) : 0;
+  const cuts = cutsFromFull + cutsFromRest;
+
+  const totalUsed  = qty * lenMm;
+  const totalStock = bars * stockLen;
+  const spill      = totalStock - totalUsed - (cuts * kerf); // spill efter sågspån räknats av
+
+  return { bars, cuts, piecesPerBar, spill, totalUsed, totalStock, kerf };
+}
+
+// Aggregerad plåtberäkning för flera detaljer på samma tjocklek/material
+function calcPlatesForItems(items, plateSizeW, plateSizeH) {
+  // Area-baserad approximation med PLATE_EFFICIENCY
+  // Summera total detaljarea för alla items
+  let totalDetailArea = 0;
+  items.forEach(item => {
+    const d = item.d || item;
+    const area = (d.L||0) * (d.W||0);
+    const qty  = item.qty || (d.QTY||1);
+    totalDetailArea += area * qty;
+  });
+  if (!totalDetailArea) return 0;
+  const plateArea = plateSizeW * plateSizeH;
+  return Math.ceil(totalDetailArea / (plateArea * PLATE_EFFICIENCY));
+}
+
+function calcPlatesNeeded(d) {
+  const detailArea = (d.L || 0) * (d.W || 0); // mm²
+  if (!detailArea) return 0;
+  const plateArea  = state.plateSizeW * state.plateSizeH;
+  const usable     = plateArea * PLATE_EFFICIENCY;
+  return Math.ceil(((d.QTY || 1) * detailArea) / usable);
+}
+
+
+// ================================================================
+// INKÖPSLISTA
+// ================================================================
+function openPurchase() {
+  buildPurchaseList();
+  document.getElementById('purchaseModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePurchase() {
+  document.getElementById('purchaseModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closePurchaseOnBg(e) {
+  if (e.target === document.getElementById('purchaseModal')) closePurchase();
+}
+
+function buildPurchaseList() {
+  const el = document.getElementById('purchaseContent');
+  if (!el) return;
+
+  const fmt    = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtInt = n => n.toLocaleString('sv-SE');
+
+  // Build from quoteList if it has items, otherwise from current calculator
+  const source = quoteList.length > 0 ? 'list' : 'calc';
+
+  // --- Helper: current calculator item ---
+  function currentCalcItem() {
+    const d = getDims();
+    const P = parseFloat(document.getElementById('kgprice')?.value) || 0;
+    if (!dimsValid(d) || !P) return null;
+    return [{
+      type: state.type,
+      mat:  state.mat,
+      density: state.density,
+      d, P,
+      stockLengthMm: state.stockLengthMm,
+      plateSizeW: state.plateSizeW,
+      plateSizeH: state.plateSizeH,
+      renkapEnabled: state.renkapEnabled,
+      rundstangFinish: state.rundstangFinish,
+      qty: d.QTY || 1,
+    }];
+  }
+
+  // --- Build items from quoteList snaps ---
+  function listItems() {
+    return quoteList.map(item => {
+      const s = item.snap;
+      if (!s) return null;
+      return {
+        type: s.type,
+        mat:  s.mat,
+        density: s.density,
+        d: s.d,
+        P: s.P,
+        stockLengthMm: state.stockLengthMm, // use current stock settings
+        plateSizeW: state.plateSizeW,
+        plateSizeH: state.plateSizeH,
+        renkapEnabled: state.renkapEnabled,
+        rundstangFinish: s.finish,
+        qty: item.qty,
+      };
+    }).filter(Boolean);
+  }
+
+  const items = source === 'list' ? listItems() : currentCalcItem();
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="purchase-empty">Lägg till artiklar i offertlistan eller beräkna ett pris</div>';
+    return;
+  }
+
+  // --- Group by material+type+dimension key ---
+  const groups = {};
+  const typeLabels = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'};
+
+  items.forEach(item => {
+    const d = item.d;
+    let dimKey = '', dimDesc = '', stockKey = '';
+
+    if (item.type === 'plat') {
+      dimKey  = item.mat + '_plat_' + (d.W||0) + 'x' + (d.L||0) + 'x' + (d.T||0);
+      stockKey = item.plateSizeW + 'x' + item.plateSizeH + 'x' + (d.T||0);
+      dimDesc  = item.plateSizeW + '×' + item.plateSizeH + '×' + (d.T||0) + ' mm';
+    } else {
+      if (item.type === 'ror')         dimDesc = 'Ø'+(d.OD||0)+'×'+(d.WT||0)+' mm';
+      else if (item.type==='plattjarn') dimDesc = (d.W||0)+'×'+(d.T||0)+' mm';
+      else if (item.type==='rundstang') dimDesc = 'Ø'+(d.D||0)+' mm';
+      else if (item.type==='vinkeljarn')dimDesc = (d.A||0)+'×'+(d.B||0)+'×'+(d.T||0)+' mm';
+      else if (item.type==='vkr')       dimDesc = (d.W||0)+'×'+(d.H||0)+'×'+(d.T||0)+' mm';
+      dimKey   = item.mat + '_' + item.type + '_' + dimDesc;
+      stockKey = dimKey;
+    }
+
+    const groupKey = item.mat + '|' + stockKey;
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        type: item.type, mat: item.mat, density: item.density,
+        dimDesc, stockKey, dimKey,
+        P: item.P, typeLabel: typeLabels[item.type] || item.type,
+        plateSizeW: item.plateSizeW, plateSizeH: item.plateSizeH,
+        stockLengthMm: item.stockLengthMm, renkapEnabled: item.renkapEnabled,
+        finish: item.rundstangFinish,
+        items: []
+      };
+    }
+    groups[groupKey].items.push(item);
+  });
+
+  let html = '';
+
+  Object.values(groups).forEach(grp => {
+    html += '<div class="purchase-section">';
+    html += '<div class="purchase-section-title">' + grp.mat + ' — ' + grp.typeLabel;
+    if (grp.finish) {
+      const fl = (RUNDSTANG_FINISH||[]).find(f=>f.key===grp.finish);
+      if (fl) html += ' · ' + fl.label;
+    }
+    html += '</div>';
+
+    if (grp.type === 'plat') {
+      // Sum up plates needed for all items in this group
+      let totalPlates = 0;
+      let totalDetailQty = 0;
+      let totalWeightKg  = 0;
+      let totalCostKr    = 0;
+
+      // Aggregate ALL items together for plate count (not per-item)
+      totalPlates = calcPlatesForItems(grp.items, grp.plateSizeW, grp.plateSizeH);
+      grp.items.forEach(item => {
+        const d = item.d;
+        totalDetailQty += item.qty;
+        const volM3     = grp.plateSizeW * grp.plateSizeH / 1e6 * (d.T||0) / 1000;
+        totalWeightKg  += volM3 * grp.density * totalPlates * (item.qty / totalDetailQty || 1);
+        totalCostKr    += volM3 * grp.density * totalPlates * (item.qty / totalDetailQty || 1) * item.P;
+      });
+      // Recalculate weight/cost properly after totalDetailQty is known
+      totalWeightKg = 0; totalCostKr = 0;
+      const plateMassM3 = grp.plateSizeW * grp.plateSizeH / 1e6;
+      grp.items.forEach(item => {
+        const d = item.d;
+        const volM3 = plateMassM3 * ((d.T||0) / 1000);
+        totalWeightKg += volM3 * grp.density * totalPlates;
+        totalCostKr   += volM3 * grp.density * totalPlates * item.P;
+      });
+      // Use average if multiple items with different prices
+      if (grp.items.length > 1) {
+        const avgVol = plateMassM3 * ((grp.items[0].d?.T||0) / 1000);
+        totalWeightKg = avgVol * grp.density * totalPlates;
+        totalCostKr   = totalWeightKg * (grp.items.reduce((s,i)=>s+i.P,0)/grp.items.length);
+      }
+
+      html += '<div class="purchase-row">';
+      html += '<div class="purchase-desc">';
+      html += '<div class="pd-title">' + grp.plateSizeW + '×' + grp.plateSizeH + ' mm råplåt</div>';
+      html += '<div class="pd-sub">' + grp.dimDesc + ' · ' + fmt(grp.P) + ' kr/kg · ' + totalDetailQty + ' detaljer</div>';
+      html += '</div>';
+      html += '<div class="purchase-qty"><div class="pq-num">' + totalPlates + '</div><div class="pq-unit">st</div></div>';
+      html += '</div>';
+      const usedPctGrp = totalPlates > 0
+        ? Math.round(grp.items.reduce((s,i)=>{const dd=i.d;return s+(dd.L||0)*(dd.W||0)*i.qty;},0)
+          / (totalPlates * grp.plateSizeW * grp.plateSizeH) * 100) : 0;
+      html += '<div class="purchase-note">⚠ Uppskattning (area-baserad, ' + Math.round(PLATE_EFFICIENCY*100) + '% utnyttj.) — verkligt antal kan avvika.<br>'
+        + 'Ca ' + fmt(totalWeightKg) + ' kg · Ca ' + fmt(totalCostKr) + ' kr inköp · Utnyttj: ~' + usedPctGrp + '%</div>';
+
+    } else {
+      // Profiler — aggregate cuts and bars
+      let totalBars = 0, totalCuts = 0, totalQty = 0, totalWeight = 0, totalCost = 0;
+
+      grp.items.forEach(item => {
+        const d   = item.d;
+        const qty = item.qty;
+        const lenMm  = d.L || 0;
+        const stock  = grp.stockLengthMm;
+        if (!lenMm || !stock) return;
+        const ppb    = Math.floor(stock / lenMm) || 1;
+        const bars   = Math.ceil(qty / ppb);
+        const full   = Math.floor(qty / ppb);
+        const rem    = qty % ppb;
+        const cuts   = full * (ppb + (grp.renkapEnabled?1:0)) + (rem > 0 ? rem + (grp.renkapEnabled?1:0) : 0);
+        totalBars   += bars;
+        totalCuts   += cuts;
+        totalQty    += qty;
+        const volPerBar = calcVolume({...d, L: stock, QTY:1});
+        const wPerBar   = volPerBar * grp.density;
+        totalWeight    += wPerBar * bars;
+        totalCost      += wPerBar * bars * item.P;
+      });
+
+      html += '<div class="purchase-row">';
+      html += '<div class="purchase-desc">';
+      html += '<div class="pd-title">' + grp.dimDesc + ' · ' + fmtInt(grp.stockLengthMm) + ' mm</div>';
+      html += '<div class="pd-sub">' + grp.typeLabel + ' · ' + totalQty + ' detaljer · ' + fmt(grp.P) + ' kr/kg</div>';
+      html += '</div>';
+      html += '<div class="purchase-qty"><div class="pq-num">' + totalBars + '</div><div class="pq-unit">st</div></div>';
+      html += '</div>';
+      const renStr = grp.renkapEnabled ? ' (inkl. renkapning)' : '';
+      html += '<div class="purchase-row">';
+      html += '<div class="purchase-desc"><div class="pd-title">Sågsnitt' + renStr + '</div>';
+      html += '<div class="pd-sub">' + totalQty + ' detaljer totalt</div></div>';
+      html += '<div class="purchase-qty"><div class="pq-num">' + totalCuts + '</div><div class="pq-unit">snitt</div></div>';
+      html += '</div>';
+      html += '<div class="purchase-note">Ca ' + fmt(totalWeight) + ' kg · Ca ' + fmt(totalCost) + ' kr inköp</div>';
+    }
+
+    html += '</div>';
+  });
+
+  // Source note
+  html += '<div style="font-size:.65rem;color:var(--muted);text-align:center;padding:10px;letter-spacing:1px;">';
+  html += source === 'list'
+    ? '📋 Baserat på ' + quoteList.length + ' artiklar i offertlistan'
+    : '📐 Baserat på aktuell kalkyl';
+  html += '</div>';
+
+  el.innerHTML = html;
 }
 
 // ================================================================
@@ -917,6 +1466,11 @@ const state = {
   marginEnabled: false,
   grovEnabled: true,
   lastCalc: null,
+  stockLengthMm: 6000,
+  renkapEnabled: 1,
+  kerfMm: 3,
+  plateSizeW: 4000,
+  plateSizeH: 2000,
   usdSek: 10.5,
 };
 
@@ -955,6 +1509,7 @@ function switchType(type) {
 
   // Dimensionsfält
   renderDimFields(type);
+  renderStockCard(type);
 
   // Skärkortet: plåt = brännning, resten = sågning
   const isPlat = type === 'plat';
@@ -1229,6 +1784,34 @@ function calculate() {
   const P = P_base * finishMult;
   const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
 
+  // Uppdatera lagerbadge alltid — oberoende av pris och beräkningsläge
+  const _badgeValid = state.type === 'plat'
+    ? (d.L||0) > 0 && (d.W||0) > 0
+    : (d.L||0) > 0;
+  if (_badgeValid) {
+    if (state.type === 'plat') {
+      const pnE = calcPlatesNeeded(d);
+      const neE = document.getElementById('plateNote');
+      if (neE && pnE > 0) {
+        const plateAreaE = state.plateSizeW * state.plateSizeH;
+        const usedPctE   = Math.round(((d.QTY||1)*(d.L||0)*(d.W||0)) / (pnE*plateAreaE) * 100);
+        neE.innerHTML = pnE + ' st plåtar (' + state.plateSizeW + '×' + state.plateSizeH + ' mm) · Utnyttj. ~' + usedPctE + '%'
+          + (pnE > 1 ? ' <span style="color:var(--accent2)">⚠ Flera plåtar</span>' : '');
+      }
+    } else {
+      const scE  = calcStockBars(d);
+      const beE  = document.getElementById('stockBarsVal');
+      const neE  = document.getElementById('stockNote');
+      if (beE) beE.textContent = scE.bars > 0 ? scE.bars + ' st' : '—';
+      if (neE && scE.bars > 0) {
+        const rsE = state.renkapEnabled ? ' + renkapning' : '';
+        neE.textContent = scE.bars + ' stänger × ' + scE.piecesPerBar + ' bitar/stång'
+          + rsE + ' = ' + scE.cuts + ' snitt'
+          + ' · Spill: ' + scE.spill.toLocaleString('sv-SE') + ' mm';
+      }
+    }
+  }
+
   // ---- GROVBERÄKNING ----
   if (state.grovEnabled) {
     if (!dimsValid(d) || !P) {
@@ -1291,8 +1874,11 @@ function calculate() {
       t15:wKg*P*(1+(parseFloat(document.getElementById('grovMatMarkup').value)||0)/100),
       sellSt:sellStG, sellTot:sellTotG,
     };
+    // (lagerbadge uppdateras redan i toppen av calculate() — ingen dubblett behövs)
     const ebG = document.getElementById('explainBtn');
     if (ebG) ebG.classList.add('visible');
+    const pbG = document.getElementById('purchaseBtn');
+    if (pbG) pbG.classList.add('visible');
     document.getElementById('addToListBtn').classList.remove('disabled');
     document.getElementById('marginPreview').textContent = '— kr';
     document.getElementById('labourCutVal').textContent  = '— kr';
@@ -1306,6 +1892,7 @@ function calculate() {
     resultArea.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
     document.getElementById('addToListBtn').classList.add('disabled');
     const ebH = document.getElementById('explainBtn'); if(ebH) ebH.classList.remove('visible');
+    const pbH = document.getElementById('purchaseBtn'); if(pbH) pbH.classList.remove('visible');
     document.getElementById('marginPreview').textContent = '— kr';
     document.getElementById('labourCutVal').textContent  = '— kr';
     document.getElementById('labourBreakdown').innerHTML = '';
@@ -1317,7 +1904,7 @@ function calculate() {
   const weightKg = volM3 * state.density;
   const matCost  = weightKg * P;
 
-  // Skärning / sågning
+  // Skärning / sågning  (lagerbadge uppdateras redan innan early return ovan)
   let cutCost=0, cutLenM=0, cutMethod='', sawSnitt=0;
   const isPlat = state.type === 'plat';
   if (state.cutEnabled) {
@@ -1328,10 +1915,21 @@ function calculate() {
       cutCost  = cutLenM * rate;
       cutMethod = isGasMethod(getThickness(d)) ? 'Gas' : 'Plasma';
     } else {
-      const rate = parseFloat(document.getElementById('cutRate').value) || 25;
-      sawSnitt = QTY; // ett snitt per detalj
-      cutCost  = sawSnitt * rate;
-      cutMethod = 'Såg';
+      const rate   = parseFloat(document.getElementById('cutRate').value) || 25;
+      const sc     = calcStockBars(d);
+      sawSnitt     = sc.cuts > 0 ? sc.cuts : QTY;
+      cutCost      = sawSnitt * rate;
+      cutMethod    = 'Såg';
+      // Update stock badge
+      const barsEl = document.getElementById('stockBarsVal');
+      const noteEl = document.getElementById('stockNote');
+      if (barsEl) barsEl.textContent = sc.bars + ' st';
+      if (noteEl && sc.bars > 0) {
+        const renStr = state.renkapEnabled ? ' + renkapning' : '';
+        noteEl.textContent = sc.bars + ' stänger × ' + sc.piecesPerBar + ' bitar/stång'
+          + renStr + ' = ' + sc.cuts + ' snitt'
+          + ' · Spill: ' + sc.spill.toLocaleString('sv-SE') + ' mm';
+      }
     }
   }
 
@@ -1396,6 +1994,35 @@ function calculate() {
   }
 
   let rows = '';
+
+  // Plåtar / stänger rad
+  if (state.type === 'plat' && QTY > 0) {
+    const pn = calcPlatesNeeded(d);
+    if (pn > 0) {
+      rows += row(
+        'Råplåtar ' + state.plateSizeW + '×' + state.plateSizeH,
+        '~' + pn + ' st',
+        pn > 1 ? 'cut' : '',
+        '⚠ Uppskattning — area-baserad beräkning\n' + state.plateSizeW + '×' + state.plateSizeH + ' mm · ' + Math.round(PLATE_EFFICIENCY*100) + '% utnyttjandegrad\n'
+        + QTY + ' st detaljer → ~' + pn + ' plåt' + (pn>1?'ar':'')
+      );
+    }
+  } else if (state.type !== 'plat') {
+    const sc = calcStockBars(d);
+    if (sc.bars > 0) {
+      const renStr = state.renkapEnabled ? ' + renkapning' : '';
+      rows += row(
+        'Lagerstång ' + state.stockLengthMm.toLocaleString('sv-SE') + ' mm',
+        sc.bars + ' st · ' + sc.cuts + ' snitt',
+        '',
+        QTY + ' st × ' + (d.L||0) + ' mm = ' + ((d.L||0)*QTY).toLocaleString('sv-SE') + ' mm\n'
+        + 'Sågspån: ' + sc.kerf + ' mm/snitt\n'
+        + '÷ ' + state.stockLengthMm.toLocaleString('sv-SE') + ' mm → ' + sc.bars + ' stänger\n'
+        + sc.piecesPerBar + ' bitar/stång' + renStr + ' = ' + sc.cuts + ' snitt\n'
+        + 'Nettospill: ' + sc.spill.toLocaleString('sv-SE') + ' mm'
+      );
+    }
+  }
 
   // Vikt
   const tipVikt = `${dimString(d)}\nVolym: ${(volM3*1e6).toFixed(2)} cm³/st\n× ${state.density.toLocaleString('sv-SE')} kg/m³\n= ${fmt(weightKg)} kg/st`;
@@ -1489,6 +2116,8 @@ function calculate() {
   // Show explain button
   const eb = document.getElementById('explainBtn');
   if (eb) eb.classList.add('visible');
+  const pb = document.getElementById('purchaseBtn');
+  if (pb) pb.classList.add('visible');
 
   document.getElementById('addToListBtn').classList.remove('disabled');
 }
@@ -1659,6 +2288,10 @@ function addToList() {
     renderList();
     DIM_FIELDS[state.type].forEach(f=>{const el=document.getElementById(f.id);if(el)el.value=f.val||'';});
     document.getElementById('kgprice').value='';
+    // Återställ alltid grovberäkning till PÅ för nästa artikel
+    state.grovEnabled = true;
+    document.getElementById('grovToggle').classList.add('on');
+    syncGrovMode();
     document.getElementById('addToListBtn').classList.add('disabled');
     document.getElementById('resultArea').innerHTML='<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
     const bA=document.getElementById('addToListBtn');
@@ -1755,6 +2388,10 @@ function addToList() {
   document.getElementById('kgprice').value = '';
   document.getElementById('cutLength').value = '';
   state.cutRateUserEdited = false;
+  // Återställ alltid grovberäkning till PÅ för nästa artikel
+  state.grovEnabled = true;
+  document.getElementById('grovToggle').classList.add('on');
+  syncGrovMode();
   document.getElementById('addToListBtn').classList.add('disabled');
   document.getElementById('resultArea').innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
   document.getElementById('marginPreview').textContent = '— kr';

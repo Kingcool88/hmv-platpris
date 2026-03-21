@@ -757,7 +757,7 @@ body.light .input-wrap select {
         <div class="section-label" style="margin-bottom:10px;">Hanteringstid</div>
         <div class="labour-time-grid">
           <div class="input-wrap"><label>Upplägg min/order</label><input type="number" id="setupTime" inputmode="decimal" placeholder="10" min="0" step="1" value="10" disabled></div>
-          <div class="input-wrap"><label>CAM/nest min/order</label><input type="number" id="camTime" inputmode="decimal" placeholder="5" min="0" step="1" value="5" disabled></div>
+          <div class="input-wrap"><label id='camLabel'>CAM/nest min/order</label><input type="number" id="camTime" inputmode="decimal" placeholder="5" min="0" step="1" value="5" disabled></div>
           <div class="input-wrap"><label id="handleTimeLabel">Nedlägg+grad min/st</label><input type="number" id="handleTime" inputmode="decimal" placeholder="3" min="0" step=".5" value="3" disabled></div>
         </div>
       </div>
@@ -1510,6 +1510,15 @@ function switchType(type) {
   // Dimensionsfält
   renderDimFields(type);
   renderStockCard(type);
+  // Reset user-edited flag and update handling defaults on type switch
+  ['setupTime','camTime','handleTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.dataset.userEdited = '0'; }
+  });
+  syncHandlingDefaults();
+  // Update CAM label based on type
+  const camLbl = document.getElementById('camLabel');
+  if (camLbl) camLbl.textContent = type === 'plat' ? 'CAM/nest min/order' : 'CAM (ej aktuellt)';
 
   // Skärkortet: plåt = brännning, resten = sågning
   const isPlat = type === 'plat';
@@ -1777,6 +1786,8 @@ function calculate() {
   const d   = getDims();
   const QTY = d.QTY || 1;
   const resultArea = document.getElementById('resultArea');
+  // Auto-update handling defaults when dims change (unless manually set)
+  syncHandlingDefaults();
   const P_base = parseFloat(document.getElementById('kgprice').value) || 0;
   const finishMult = (state.type === 'rundstang')
     ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
@@ -2137,6 +2148,73 @@ function syncGrovMode() {
     : 'Detaljerad kalkyl — skärning, personal och marginal aktiveras';
 }
 
+// Standardtider för hantering baserat på produkttyp och dimensioner
+function getHandlingDefaults(type, d) {
+  const T   = d?.T  || d?.WT || 0;   // tjocklek/gods
+  const D   = d?.D  || 0;             // diameter (rundstång)
+  const dim = T || D || 0;
+
+  let handleMin = 1;   // nedlägg + gradning per st
+  let setupMin  = 10;  // upplägg per order
+  let camMin    = 0;   // CAM — bara för plåt
+
+  switch (type) {
+    case 'plat': {
+      // Viktbaserad hanteringstid för plåt
+      const volM3detail = ((d.L||0)/1000) * ((d.W||0)/1000) * ((d.T||0)/1000);
+      const weightKgDetail = volM3detail * 7850; // approximera med stål för default
+      if      (weightKgDetail < 5)  handleMin = 0.5;
+      else if (weightKgDetail < 15) handleMin = Math.round((0.5 + weightKgDetail * 0.07) * 10) / 10;
+      else if (weightKgDetail < 40) handleMin = Math.round((1.5 + weightKgDetail * 0.08) * 10) / 10;
+      else if (weightKgDetail < 100)handleMin = Math.round((3.0 + weightKgDetail * 0.06) * 10) / 10;
+      else                          handleMin = Math.round((6.0 + weightKgDetail * 0.04) * 10) / 10;
+      handleMin = Math.max(0.5, Math.min(20, handleMin));
+      setupMin  = 10;
+      camMin    = 5;
+      break;
+    }
+    case 'ror':
+    case 'vkr':
+      handleMin = Math.round((0.3 + dim * 0.05) * 10) / 10;
+      handleMin = Math.max(0.3, Math.min(5, handleMin));
+      setupMin  = 3;
+      camMin    = 0;
+      break;
+    case 'plattjarn':
+    case 'vinkeljarn':
+      handleMin = Math.round((0.2 + dim * 0.03) * 10) / 10;
+      handleMin = Math.max(0.3, Math.min(5, handleMin));
+      setupMin  = 3;
+      camMin    = 0;
+      break;
+    case 'rundstang':
+      handleMin = Math.round((0.2 + dim * 0.025) * 10) / 10;
+      handleMin = Math.max(0.3, Math.min(4, handleMin));
+      setupMin  = 3;
+      camMin    = 0;
+      break;
+    default:
+      handleMin = 1;
+      setupMin  = 5;
+      camMin    = 0;
+  }
+  return { handleMin, setupMin, camMin };
+}
+
+// Uppdatera hanteringstider i GUI om användaren inte ändrat manuellt
+function syncHandlingDefaults() {
+  if (!state.labourEnabled) return;
+  const d = getDims();
+  const def = getHandlingDefaults(state.type, d);
+  // Only update if field hasn't been manually edited (check against last auto-value)
+  ['handleTime', 'setupTime', 'camTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.userEdited === '1') return;
+    const key = id === 'handleTime' ? 'handleMin' : id === 'setupTime' ? 'setupMin' : 'camMin';
+    el.value = def[key];
+  });
+}
+
 function setupToggles() {
   document.getElementById('cutToggleRow').addEventListener('click', () => {
     state.cutEnabled = !state.cutEnabled;
@@ -2160,6 +2238,14 @@ function setupToggles() {
     ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
       document.getElementById(id).disabled = !state.labourEnabled;
     });
+    if (state.labourEnabled) {
+      // Reset user-edited flags and apply fresh defaults when enabling
+      ['setupTime','camTime','handleTime'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dataset.userEdited = '0';
+      });
+      syncHandlingDefaults();
+    }
     calculate();
   });
 
@@ -2225,6 +2311,11 @@ function setupInputListeners() {
   ['kgprice','cutRate','labourRate','setupTime','camTime','handleTime','marginPct','grovMatMarkup','grovProdMarkup'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', calculate);
+  });
+  // Mark labour time fields as user-edited when manually changed
+  ['setupTime','camTime','handleTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => { el.dataset.userEdited = '1'; });
   });
 
   // Wizard step 3→4: advance only when user finishes entering price (blur or Enter)

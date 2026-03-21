@@ -1969,9 +1969,10 @@ function calculate() {
         cutTimeMin = (cutLenM*1000)/spd;
         labourCutCost = cutTimeMin * lpm * QTY;
       } else if (!isPlat) {
-        // Sågning: uppskatta 2 min/snitt operatörstid
-        cutTimeMin = 2;
-        labourCutCost = cutTimeMin * lpm * QTY;
+        // Sågning: 2 min per stång (uppspänning + körning), inte per snitt
+        const scL = calcStockBars(d);
+        cutTimeMin = 2; // min per stång
+        labourCutCost = cutTimeMin * lpm * scL.bars;
       }
     }
     labourSetupCost  = (setup + cam) * lpm;
@@ -1992,18 +1993,15 @@ function calculate() {
     document.getElementById('labourBreakdown').innerHTML = '';
   }
 
-  const inCost = matCost + cutCost + labourCost;
+  // inCost = total orderkostnad (allt per order)
+  const matCostOrder = matCost * QTY;  // matCost är per st → multiplicera med antal
+  const inCost = matCostOrder + cutCost + labourCost;
   let marginCost = 0;
   if (state.marginEnabled && MRG > 0) marginCost = inCost * (MRG/100);
-  document.getElementById('marginPreview').textContent = (state.marginEnabled && MRG>0) ? `${fmt(marginCost)} kr` : '— kr';
+  document.getElementById('marginPreview').textContent = (state.marginEnabled && MRG>0) ? `${fmt(marginCost/QTY)} kr` : '— kr';
 
-  const sellEach  = inCost + marginCost;
-  const sellTotal = sellEach; // inCost already includes all QTY costs except matCost/st
-
-  // Faktiska per-st priser (inCost innehåller QTY-multipel för cut/labour men ej matCost)
-  // Räkna om: matCost är per ST, cut och labour är per ORDER (inkl QTY multiplar)
-  // Enklare: sellTotal = sellEach redan är per order
-  const sellPerSt = sellEach / QTY;
+  const sellTotal = inCost + marginCost;  // totalt för hela ordern
+  const sellPerSt = sellTotal / QTY;      // per styck
 
   // ---- BYGG RESULTATRADER ----
   function row(label, value, cls, tip) {
@@ -2045,7 +2043,7 @@ function calculate() {
   // Vikt
   const tipVikt = `${dimString(d)}\nVolym: ${(volM3*1e6).toFixed(2)} cm³/st\n× ${state.density.toLocaleString('sv-SE')} kg/m³\n= ${fmt(weightKg)} kg/st`;
   rows += row('Vikt / st', `${fmt(weightKg)} kg`, '', tipVikt);
-  rows += row('Material / st', `${fmt(matCost)} kr`, '', `${fmt(weightKg)} kg × ${fmt(P)} kr/kg\n= ${fmt(matCost)} kr`);
+  rows += row('Material / st', fmt(matCost) + ' kr', '', fmt(weightKg) + ' kg × ' + fmt(P) + ' kr/kg\n= ' + fmt(matCost) + ' kr');
 
   if (state.cutEnabled) {
     if (isPlat) {
@@ -2054,8 +2052,9 @@ function calculate() {
         `${fmt(cutLenM)} m × ${fmt(rate2)} kr/m\n= ${fmt(cutCost)} kr`);
     } else {
       const rate2 = parseFloat(document.getElementById('cutRate').value) || 25;
-      rows += row(`Såg ${QTY} snitt`, `${fmt(cutCost)} kr`, 'saw-v',
-        `${QTY} st × ${fmt(rate2)} kr/snitt\n= ${fmt(cutCost)} kr`);
+      const scRow = calcStockBars(d);
+      rows += row('Såg ' + scRow.cuts + ' snitt', fmt(cutCost) + ' kr', 'saw-v',
+        scRow.cuts + ' snitt × ' + fmt(rate2) + ' kr/snitt\n= ' + fmt(cutCost) + ' kr');
     }
   }
 
@@ -2063,9 +2062,13 @@ function calculate() {
     rows += '<div class="result-divider"></div>';
     const lrh2 = parseFloat(document.getElementById('labourRate').value)||450;
     const lpm2 = lrh2/60;
-    if (state.cutEnabled && labourCutCost>0)
-      rows += row('Lön bearbetning', `${fmt(labourCutCost)} kr`, 'labour',
-        `${cutTimeMin.toFixed(2)} min/st × ${QTY} st\n× ${lpm2.toFixed(2)} kr/min (${lrh2} kr/h)\n= ${fmt(labourCutCost)} kr`);
+    if (state.cutEnabled && labourCutCost>0) {
+      const scTip = isPlat ? null : calcStockBars(d);
+      const labTip = isPlat
+        ? cutTimeMin.toFixed(2) + ' min/st × ' + QTY + ' st\n× ' + lpm2.toFixed(2) + ' kr/min (' + lrh2 + ' kr/h)\n= ' + fmt(labourCutCost) + ' kr'
+        : '2 min/stång × ' + (scTip?.bars||'?') + ' stänger\n× ' + lpm2.toFixed(2) + ' kr/min (' + lrh2 + ' kr/h)\n= ' + fmt(labourCutCost) + ' kr';
+      rows += row('Lön bearbetning', fmt(labourCutCost) + ' kr', 'labour', labTip);
+    }
     const sm2 = parseFloat(document.getElementById('setupTime').value)||0;
     const cm2 = parseFloat(document.getElementById('camTime').value)||0;
     const hm2 = parseFloat(document.getElementById('handleTime').value)||0;
@@ -2079,19 +2082,22 @@ function calculate() {
 
   if (state.cutEnabled || state.labourEnabled) {
     rows += '<div class="result-divider"></div>';
-    rows += row('Inpris / st', `${fmt(inCost/QTY)} kr`, '',
-      `(Material + Skär/Såg + Personal) ÷ ${QTY} st\n= ${fmt(inCost/QTY)} kr/st`);
-    if (QTY>1) rows += row('Inpris / order', `${fmt(inCost)} kr`, '', `${fmt(inCost/QTY)} kr × ${QTY} st\n= ${fmt(inCost)} kr`);
+    rows += row('Inpris / st', fmt(inCost/QTY) + ' kr', '',
+      '(Material + Skär/Såg + Personal) ÷ ' + QTY + ' st\n= ' + fmt(inCost/QTY) + ' kr/st');
+    if (QTY>1) rows += row('Inpris / order', fmt(inCost) + ' kr', '',
+      fmt(inCost/QTY) + ' kr × ' + QTY + ' st\n= ' + fmt(inCost) + ' kr');
   }
 
   if (state.marginEnabled && MRG>0) {
     rows += '<div class="result-divider"></div>';
-    rows += row(`Marginal ${MRG}%`, `+ ${fmt(marginCost)} kr`, 'margin-val', `${fmt(inCost)} kr × ${MRG}%\n= ${fmt(marginCost)} kr`);
-    rows += row('Försäljningspris / st', `${fmt(sellPerSt)} kr`, 'sell', `${fmt(inCost/QTY)} + ${fmt(marginCost/QTY)}\n= ${fmt(sellPerSt)} kr/st`);
+    rows += row('Marginal ' + MRG + '%', '+ ' + fmt(marginCost/QTY) + ' kr/st', 'margin-val',
+      fmt(inCost) + ' kr × ' + MRG + '%\n= ' + fmt(marginCost) + ' kr (order)');
+    rows += row('Försäljningspris / st', fmt(sellPerSt) + ' kr', 'sell',
+      fmt(inCost/QTY) + ' + ' + fmt(marginCost/QTY) + '\n= ' + fmt(sellPerSt) + ' kr/st');
   }
 
-  if (QTY>1) rows += row('Antal · tot vikt', `${QTY} st · ${fmt(weightKg*QTY)} kg`, '',
-    `${QTY} st × ${fmt(weightKg)} kg = ${fmt(weightKg*QTY)} kg`);
+  if (QTY>1) rows += row('Antal · tot vikt', QTY + ' st · ' + fmt(weightKg*QTY) + ' kg', '',
+    QTY + ' st × ' + fmt(weightKg) + ' kg = ' + fmt(weightKg*QTY) + ' kg');
 
   const totalLabel = (state.marginEnabled&&MRG>0) ? (QTY>1?'FÖRSÄLJNING TOT':'FÖRSÄLJNINGSPRIS') : (QTY>1?'TOTALT':'PRIS');
 
@@ -2100,7 +2106,7 @@ function calculate() {
     ${rows}
     <div class="result-total">
       <span class="rt-label">${totalLabel}</span>
-      <span class="rt-price">${fmt(sellEach)}<span class="rt-currency">kr</span></span>
+      <span class="rt-price">${fmt(sellTotal)}<span class="rt-currency">kr</span></span>
     </div>
   </div>`;
 
@@ -2125,10 +2131,10 @@ function calculate() {
     handleMin: parseFloat(document.getElementById('handleTime').value)||0,
     labourCutCost, labourHandleCost, labourCost,
     setupCost: labourSetupCost,
-    inCostPerSt: inCost/QTY,
+    inCostPerSt: inCost/QTY,  // inCost är nu per order
     marginEnabled: state.marginEnabled, MRG,
     marginPerSt: marginCost/QTY,
-    sellSt: sellEach/QTY, sellTot: sellEach,
+    sellSt: sellPerSt, sellTot: sellTotal,
   };
 
   // Show explain button
@@ -2431,7 +2437,11 @@ function addToList() {
         ? parseFloat(document.getElementById('cutLength').value)/1000
         : getPerimeter(d)/1000;
       ctm = (cl*1000)/spd;
-    } else if (state.cutEnabled && !isPlat) { ctm = 2; }
+    } else if (state.cutEnabled && !isPlat) {
+      // 2 min per stång, inte per detalj
+      const scAdd = calcStockBars(d);
+      ctm = 2 * scAdd.bars / Math.max(1, QTY); // omvandla till per-detalj-ekvivalent för kostnadsberäkning
+    }
     const setupCostA = (setup+cam)*lpm;
     labourCost = (ctm*lpm*QTY) + (hand*lpm*QTY); // setup excluded from per-item
   }

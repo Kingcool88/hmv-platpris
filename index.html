@@ -1015,9 +1015,10 @@ function renderStockCard(type) {
           <input type="number" id="kerfInput" inputmode="decimal"
             placeholder="3" min="0" step="0.5" value="${state.kerfMm}">
         </div>
-        <div class="info-badge">
-          <span class="ib-label">Per snitt</span>
-          <span class="ib-value" id="kerfVal">${state.kerfMm} mm</span>
+        <div class="input-wrap">
+          <label>Överlängd mm</label>
+          <input type="number" id="toleranceInput" inputmode="numeric"
+            placeholder="30" min="0" step="5" value="${state.stockToleranceMm}">
         </div>
       </div>
       <div class="toggle-row" id="renkapToggleRow" style="padding:10px 0 0;">
@@ -1040,8 +1041,10 @@ function renderStockCard(type) {
     });
     document.getElementById('kerfInput').addEventListener('input', e => {
       state.kerfMm = parseFloat(e.target.value) || 3;
-      const kv = document.getElementById('kerfVal');
-      if (kv) kv.textContent = state.kerfMm + ' mm';
+      calculate();
+    });
+    document.getElementById('toleranceInput').addEventListener('input', e => {
+      state.stockToleranceMm = parseFloat(e.target.value) || 0;
       calculate();
     });
   }
@@ -1050,8 +1053,9 @@ function renderStockCard(type) {
 function calcStockBars(d) {
   const lenMm    = d.L || 0;
   const qty      = d.QTY || 1;
-  const stockLen = state.stockLengthMm;
-  const kerf     = state.kerfMm || 3; // sågspån mm per snitt
+  const stockLen    = state.stockLengthMm + (state.stockToleranceMm || 0); // inkl. överlängd
+  const nominalLen  = state.stockLengthMm; // nominell längd (för prisberäkning)
+  const kerf        = state.kerfMm || 3; // sågspån mm per snitt
   if (!lenMm || !stockLen) return { bars:0, cuts:0, piecesPerBar:0, spill:0, kerf };
 
   // Varje bit tar lenMm + kerf utom sista biten på stången (inga renkapsnitt ännu)
@@ -1075,11 +1079,12 @@ function calcStockBars(d) {
   const cutsFromRest = remainder > 0 ? remainder + (state.renkapEnabled ? 1 : 0) : 0;
   const cuts = cutsFromFull + cutsFromRest;
 
-  const totalUsed  = qty * lenMm;
-  const totalStock = bars * stockLen;
-  const spill      = totalStock - totalUsed - (cuts * kerf); // spill efter sågspån räknats av
+  const totalUsed   = qty * lenMm;
+  const totalStock  = bars * nominalLen;  // kostnad baseras på nominell längd
+  const totalActual = bars * stockLen;    // faktisk längd inkl. överlängd
+  const spill       = totalActual - totalUsed - (cuts * kerf); // nettospill inkl. överlängd
 
-  return { bars, cuts, piecesPerBar, spill, totalUsed, totalStock, kerf };
+  return { bars, cuts, piecesPerBar, spill, totalUsed, totalStock, totalActual, kerf, nominalLen, stockLen };
 }
 
 // Aggregerad plåtberäkning för flera detaljer på samma tjocklek/material
@@ -1467,6 +1472,7 @@ const state = {
   grovEnabled: true,
   lastCalc: null,
   stockLengthMm: 6000,
+  stockToleranceMm: 30,
   renkapEnabled: 1,
   kerfMm: 3,
   plateSizeW: 4000,
@@ -1818,6 +1824,7 @@ function calculate() {
         const rsE = state.renkapEnabled ? ' + renkapning' : '';
         neE.textContent = scE.bars + ' stänger × ' + scE.piecesPerBar + ' bitar/stång'
           + rsE + ' = ' + scE.cuts + ' snitt'
+          + ' · Eff. ' + (state.stockLengthMm+(state.stockToleranceMm||0)).toLocaleString('sv-SE') + ' mm'
           + ' · Spill: ' + scE.spill.toLocaleString('sv-SE') + ' mm';
       }
     }

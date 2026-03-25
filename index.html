@@ -725,6 +725,7 @@ body.light .input-wrap select {
       <div>
         <div class="toggle-label">Grovberäkning</div>
         <div class="toggle-sub" id="grovToggleSub">Snabbt styckpris — material × påslag × produktpåslag</div>
+        <div style="font-size:.6rem;color:var(--muted);letter-spacing:1px;margin-top:2px;">Endast tillgänglig för plåt</div>
       </div>
     </div>
     <div id="grovInputs" style="margin-top:12px;transition:opacity .2s;">
@@ -1686,7 +1687,7 @@ const state = {
 function init() {
   renderTypeGrid();
   switchType('plat');
-  syncGrovMode();
+  syncGrovMode();  // plat är default — grovCard visas
   setupToggles();
   setupInputListeners();
   applyTheme();
@@ -1725,6 +1726,24 @@ function switchType(type) {
   // Update CAM label based on type
   const camLbl = document.getElementById('camLabel');
   if (camLbl) camLbl.textContent = type === 'plat' ? 'CAM/nest min/order' : 'CAM (ej aktuellt)';
+
+  // Grovberäkning endast tillgänglig för plåt
+  const grovCard = document.getElementById('grovCard');
+  if (grovCard) {
+    if (type === 'plat') {
+      grovCard.style.display = '';
+    } else {
+      grovCard.style.display = 'none';
+      // Tvinga detaljkalkyl för profiler och aktivera alla kostnadskomponenter
+      if (state.grovEnabled) {
+        state.grovEnabled = false;
+        const gt = document.getElementById('grovToggle');
+        if (gt) gt.classList.remove('on');
+        syncGrovMode();
+      }
+      enableDetailMode();
+    }
+  }
 
   // Skärkortet: plåt = brännning, resten = sågning
   const isPlat = type === 'plat';
@@ -1936,6 +1955,26 @@ function dimString(d) {
 // ================================================================
 function isGasMethod(T) { return state.type==='plat' && T>25 && state.mat!=='ALU'; }
 
+function calcSawRate(type, d) {
+  // Automatiskt kr/snitt baserat på yttersta dimension
+  // Litet rör/profil = snabbt = billigt, stort = dyrt
+  let outerDim = 0;
+  if (type === 'ror')         outerDim = d.OD || 0;
+  else if (type === 'vkr')    outerDim = Math.max(d.W||0, d.H||0);
+  else if (type === 'plattjarn') outerDim = d.W || 0;
+  else if (type === 'rundstang') outerDim = d.D || 0;
+  else if (type === 'vinkeljarn') outerDim = Math.max(d.A||0, d.B||0);
+  else outerDim = 50; // fallback
+
+  // Skala: ~5 kr för Ø10, ~15 kr för Ø50, ~35 kr för Ø150, ~60 kr för Ø300+
+  if      (outerDim <= 15)  return 5;
+  else if (outerDim <= 30)  return Math.round(5 + (outerDim-15) * 0.4);
+  else if (outerDim <= 60)  return Math.round(11 + (outerDim-30) * 0.3);
+  else if (outerDim <= 120) return Math.round(20 + (outerDim-60) * 0.25);
+  else if (outerDim <= 250) return Math.round(35 + (outerDim-120) * 0.15);
+  else                      return Math.round(55 + (outerDim-250) * 0.08);
+}
+
 function syncCutMethod() {
   const d = getDims();
   const T = getThickness(d);
@@ -1952,8 +1991,13 @@ function syncCutMethod() {
     methodText.textContent = 'SÅG';
     rateLabel.textContent  = 'Pris kr / snitt';
     document.getElementById('cutLengthWrap').style.display = 'none';
-    if (!state.cutRateUserEdited) rateInput.value = '25';
-    cutNote.textContent = 'Fast kostnad per snitt. Kapar med såg.';
+    if (!state.cutRateUserEdited) {
+      const autoSawRate = calcSawRate(state.type, d);
+      rateInput.value = autoSawRate;
+      cutNote.textContent = 'Auto: ' + autoSawRate + ' kr/snitt baserat på dimension. Ändra för eget pris.';
+    } else {
+      cutNote.textContent = 'Fast kostnad per snitt. Kapar med såg.';
+    }
     return;
   }
 
@@ -2057,9 +2101,19 @@ function calculate() {
     const volM3g  = calcVolume(d);
     const wKg     = volM3g * state.density;
     const matCostG = wKg * P;
-    const t15      = matCostG * (1 + matMup);
-    const sellStG  = t15 * (1 + prodMup);
-    const sellTotG = sellStG * QTY;
+
+    // För profiler: lägg på sågkostnad i grovberäkning
+    let sawCostG = 0;
+    if (state.type !== 'plat') {
+      const scG     = calcStockBars(d);
+      const sawRate = calcSawRate(state.type, d);
+      sawCostG = scG.cuts * sawRate;
+    }
+
+    const matOrderG = matCostG * QTY;
+    const t15      = (matOrderG + sawCostG) * (1 + matMup);
+    const sellTotG = t15 * (1 + prodMup);
+    const sellStG  = sellTotG / QTY;
     const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     function gRow(label, value, cls, tip) {
@@ -2067,21 +2121,21 @@ function calculate() {
       return `<div class="result-row"${ta}><span class="result-label">${label}</span><span class="result-value${cls?' '+cls:''}">${value}</span></div>`;
     }
     let gRows = '';
-    gRows += gRow('Vikt / st', `${fmt(wKg)} kg`, '',
-      `${dimString(d)}
-× ${state.density.toLocaleString('sv-SE')} kg/m³
-= ${fmt(wKg)} kg`);
-    gRows += gRow('Material / st', `${fmt(matCostG)} kr`, '',
-      `${fmt(wKg)} kg × ${fmt(P)} kr/kg
-= ${fmt(matCostG)} kr`);
-    gRows += gRow(`Mat.påslag ${(matMup*100).toFixed(0)}%`, `${fmt(t15)} kr`, 'cut',
-      `${fmt(matCostG)} × (1 + ${(matMup*100).toFixed(0)}%)
-= ${fmt(t15)} kr`);
-    gRows += gRow(`Prod.påslag ${(prodMup*100).toFixed(0)}%`, `${fmt(sellStG)} kr/st`, 'sell',
-      `${fmt(t15)} × (1 + ${(prodMup*100).toFixed(0)}%)
-= ${fmt(sellStG)} kr/st`);
-    if (QTY > 1) gRows += gRow('Antal · tot vikt', `${QTY} st · ${fmt(wKg*QTY)} kg`, '',
-      `${QTY} st × ${fmt(wKg)} kg = ${fmt(wKg*QTY)} kg`);
+    gRows += gRow('Vikt / st', fmt(wKg) + ' kg', '',
+      dimString(d) + '\n× ' + state.density.toLocaleString('sv-SE') + ' kg/m³\n= ' + fmt(wKg) + ' kg');
+    gRows += gRow('Material / st', fmt(matCostG) + ' kr', '',
+      fmt(wKg) + ' kg × ' + fmt(P) + ' kr/kg\n= ' + fmt(matCostG) + ' kr');
+    if (sawCostG > 0) {
+      const scG2 = calcStockBars(d);
+      gRows += gRow('Sågning ' + scG2.cuts + ' snitt', fmt(sawCostG) + ' kr', 'cut',
+        scG2.cuts + ' snitt × ' + calcSawRate(state.type, d) + ' kr/snitt\n= ' + fmt(sawCostG) + ' kr');
+    }
+    gRows += gRow('Mat.påslag ' + (matMup*100).toFixed(0) + '%', fmt(t15) + ' kr', 'cut',
+      '(' + fmt(matOrderG) + (sawCostG>0?' + ' + fmt(sawCostG):'') + ') × (1 + ' + (matMup*100).toFixed(0) + '%)\n= ' + fmt(t15) + ' kr');
+    gRows += gRow('Prod.påslag ' + (prodMup*100).toFixed(0) + '%', fmt(sellStG) + ' kr/st', 'sell',
+      fmt(t15) + ' × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
+    if (QTY > 1) gRows += gRow('Antal · tot vikt', QTY + ' st · ' + fmt(wKg*QTY) + ' kg', '',
+      QTY + ' st × ' + fmt(wKg) + ' kg = ' + fmt(wKg*QTY) + ' kg');
 
     resultArea.innerHTML = `<div class="result-card">
       <div class="card-title" style="margin-bottom:12px;">
@@ -2099,9 +2153,10 @@ function calculate() {
       grov:true, dimStr:displayTitle(d), QTY,
       volCm3:volM3g*1e6, density:state.density,
       weightKg:wKg, P, matCost:wKg*P,
+      sawCostG,
       matMup:(parseFloat(document.getElementById('grovMatMarkup').value)||0),
       prodMup:(parseFloat(document.getElementById('grovProdMarkup').value)||0),
-      t15:wKg*P*(1+(parseFloat(document.getElementById('grovMatMarkup').value)||0)/100),
+      t15,
       sellSt:sellStG, sellTot:sellTotG,
     };
     // (lagerbadge uppdateras redan i toppen av calculate() — ingen dubblett behövs)
@@ -2361,6 +2416,37 @@ function calculate() {
 // ================================================================
 // TOGGLES
 // ================================================================
+function enableDetailMode() {
+  // Skärning
+  if (!state.cutEnabled) {
+    state.cutEnabled = true;
+    document.getElementById('cutToggle').classList.add('on');
+    document.getElementById('cutInputs').classList.remove('disabled');
+    document.getElementById('cutBadgeWrap').style.display = 'block';
+    document.getElementById('cutToggleSub').textContent = 'Beräknas separat och läggs på';
+    syncCutMethod();
+  }
+  // Personal
+  if (!state.labourEnabled) {
+    state.labourEnabled = true;
+    document.getElementById('labourToggle').classList.add('on');
+    const li = document.getElementById('labourInputs');
+    if (li) { li.style.opacity = '1'; li.style.pointerEvents = 'auto'; }
+    ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = false;
+    });
+  }
+  // Marginal
+  if (!state.marginEnabled) {
+    state.marginEnabled = true;
+    document.getElementById('marginToggle').classList.add('on');
+    const mp = document.getElementById('marginPct');
+    if (mp) mp.disabled = false;
+  }
+}
+
+
 function syncGrovMode() {
   const g = state.grovEnabled;
   ['cutCard','labourToggleRow','marginToggleRow'].forEach(id => {
@@ -2485,36 +2571,8 @@ function setupToggles() {
     state.grovEnabled = !state.grovEnabled;
     document.getElementById('grovToggle').classList.toggle('on', state.grovEnabled);
 
-    // När grovberäkning stängs AV — aktivera skärning, personal och marginal automatiskt
-    if (!state.grovEnabled) {
-      // Skärning
-      if (!state.cutEnabled) {
-        state.cutEnabled = true;
-        document.getElementById('cutToggle').classList.add('on');
-        document.getElementById('cutInputs').classList.remove('disabled');
-        document.getElementById('cutBadgeWrap').style.display = 'block';
-        document.getElementById('cutToggleSub').textContent = 'Beräknas separat och läggs på';
-        syncCutMethod();
-      }
-      // Personal
-      if (!state.labourEnabled) {
-        state.labourEnabled = true;
-        document.getElementById('labourToggle').classList.add('on');
-        const li = document.getElementById('labourInputs');
-        if (li) { li.style.opacity = '1'; li.style.pointerEvents = 'auto'; }
-        ['labourRate','setupTime','camTime','handleTime'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.disabled = false;
-        });
-      }
-      // Marginal
-      if (!state.marginEnabled) {
-        state.marginEnabled = true;
-        document.getElementById('marginToggle').classList.add('on');
-        const mp = document.getElementById('marginPct');
-        if (mp) mp.disabled = false;
-      }
-    }
+    // Aktivera skärning, personal och marginal automatiskt
+    if (!state.grovEnabled) enableDetailMode();
 
     syncGrovMode();
     calculate();

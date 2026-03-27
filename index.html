@@ -1847,12 +1847,14 @@ function switchType(type) {
   // Hantering-label
   document.getElementById('handleTimeLabel').textContent = isPlat ? 'Nedlägg+grad min/st' : 'Nedlägg+burr min/st';
 
-  // Reset cut toggle
-  state.cutEnabled = false;
-  document.getElementById('cutToggle').classList.remove('on');
-  document.getElementById('cutInputs').classList.add('disabled');
-  document.getElementById('cutBadgeWrap').style.display = 'none';
-  document.getElementById('cutToggleSub').textContent = isPlat ? 'Ej inkluderat i kg-priset' : 'Ej inkluderat i kg-priset';
+  if (isPlat) {
+    // Plåt: nollställ sågknappen, användaren aktiverar manuellt
+    state.cutEnabled = false;
+    document.getElementById('cutToggle').classList.remove('on');
+    document.getElementById('cutInputs').classList.add('disabled');
+    document.getElementById('cutBadgeWrap').style.display = 'none';
+    document.getElementById('cutToggleSub').textContent = 'Ej inkluderat i kg-priset';
+  }
 
   syncCutMethod();
   calculate();

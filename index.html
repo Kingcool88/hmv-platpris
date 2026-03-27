@@ -593,6 +593,33 @@ body.light .input-wrap select {
   text-transform: uppercase;
 }
 
+
+/* PRISENHET-TABS */
+.price-unit-tabs {
+  display: flex;
+  gap: 6px;
+}
+.put-btn {
+  flex: 1;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: 'Roboto Mono', monospace;
+  font-size: .8rem;
+  letter-spacing: 1px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.put-btn.active {
+  background: rgba(240,165,0,.12);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
 </style>
 </head>
 <body>
@@ -691,8 +718,15 @@ body.light .input-wrap select {
   <!-- MATERIALPRIS -->
   <div class="card">
     <div class="card-title">Materialpris</div>
+    <!-- Prisenhet-toggle (döljs för plåt) -->
+    <div id="priceUnitToggleWrap" style="display:none;margin-bottom:12px;">
+      <div class="price-unit-tabs" id="priceUnitTabs">
+        <button class="put-btn active" id="putKg" onclick="setPriceUnit('kg')">kr / kg</button>
+        <button class="put-btn" id="putM"  onclick="setPriceUnit('m')">kr / m</button>
+      </div>
+    </div>
     <div class="input-wrap">
-      <label>Inpris kr / kg</label>
+      <label id="kgpriceLabel">Inpris kr / kg</label>
       <input type="number" id="kgprice" inputmode="decimal" placeholder="12.50" min="0" step="0.01">
     </div>
     <div style="margin-top:12px;">
@@ -1531,6 +1565,54 @@ function applyPipeRec(od, wt) {
   calculate();
 }
 
+
+// ================================================================
+// PRISENHET — kr/kg eller kr/m (profiler)
+// ================================================================
+function setPriceUnit(unit) {
+  state.priceUnit = unit;
+  document.getElementById('putKg').classList.toggle('active', unit === 'kg');
+  document.getElementById('putM').classList.toggle('active', unit === 'm');
+  const lbl = document.getElementById('kgpriceLabel');
+  if (lbl) lbl.textContent = unit === 'm' ? 'Inpris kr / m' : 'Inpris kr / kg';
+  const inp = document.getElementById('kgprice');
+  if (inp) inp.placeholder = unit === 'm' ? '45.00' : '12.50';
+  // Reset source dot to manual when switching unit
+  const dot = document.getElementById('sourceDot');
+  if (dot) { dot.style.background = ''; dot.classList.add('manual'); }
+  const src = document.getElementById('sourceText');
+  if (src) src.textContent = 'Ange pris manuellt';
+  calculate();
+}
+
+function syncPriceUnitUI(type) {
+  const wrap = document.getElementById('priceUnitToggleWrap');
+  if (!wrap) return;
+  if (type === 'plat') {
+    wrap.style.display = 'none';
+    // Force kg for plates
+    if (state.priceUnit !== 'kg') {
+      state.priceUnit = 'kg';
+      document.getElementById('putKg').classList.add('active');
+      document.getElementById('putM').classList.remove('active');
+      const lbl = document.getElementById('kgpriceLabel');
+      if (lbl) lbl.textContent = 'Inpris kr / kg';
+    }
+  } else {
+    wrap.style.display = 'block';
+  }
+}
+
+// Convert kr/m price to effective kr/kg for weight-based cost calculation
+function getPricePerKg(d) {
+  const P_input = parseFloat(document.getElementById('kgprice')?.value) || 0;
+  if (state.priceUnit === 'kg' || state.type === 'plat') return P_input;
+  // kr/m → kr/kg: calcVolume(L=1000) already gives m³ per meter
+  const volPerM = calcVolume({...d, L: 1000}); // m³ per meter (L=1000mm = 1m)
+  const kgPerM  = volPerM * state.density;
+  if (!kgPerM) return P_input;
+  return P_input / kgPerM;
+}
 // ================================================================
 // KONFIGURATION
 // ================================================================
@@ -1671,6 +1753,7 @@ const state = {
   labourEnabled: false,
   marginEnabled: false,
   grovEnabled: true,
+  priceUnit: 'kg',
   lastCalc: null,
   stockLengthMm: 6000,
   stockToleranceMm: 30,
@@ -1726,6 +1809,7 @@ function switchType(type) {
   // Update CAM label based on type
   const camLbl = document.getElementById('camLabel');
   if (camLbl) camLbl.textContent = type === 'plat' ? 'CAM/nest min/order' : 'CAM (ej aktuellt)';
+  syncPriceUnitUI(type);
 
   // Grovberäkning endast tillgänglig för plåt
   const grovCard = document.getElementById('grovCard');
@@ -1741,7 +1825,16 @@ function switchType(type) {
         if (gt) gt.classList.remove('on');
         syncGrovMode();
       }
-      enableDetailMode();
+      // Force-enable cut regardless of current state
+      state.cutEnabled = true;
+      const ctEl = document.getElementById('cutToggle');
+      const ciEl = document.getElementById('cutInputs');
+      const cbEl = document.getElementById('cutBadgeWrap');
+      if (ctEl) ctEl.classList.add('on');
+      if (ciEl) ciEl.classList.remove('disabled');
+      if (cbEl) cbEl.style.display = 'block';
+      syncCutMethod();
+      enableDetailMode(); // handles labour + margin
     }
   }
 
@@ -2054,7 +2147,9 @@ function calculate() {
   const finishMult = (state.type === 'rundstang')
     ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
     : 1.0;
-  const P = P_base * finishMult;
+  // Convert to kr/kg if user entered kr/m
+  const P_kg = getPricePerKg(d);
+  const P = P_kg * finishMult;
   const MRG = parseFloat(document.getElementById('marginPct').value) || 0;
 
   // Uppdatera lagerbadge alltid — oberoende av pris och beräkningsläge
@@ -2088,7 +2183,7 @@ function calculate() {
 
   // ---- GROVBERÄKNING ----
   if (state.grovEnabled) {
-    if (!dimsValid(d) || !P) {
+    if (!dimsValid(d) || !P_base) {
       resultArea.innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i alla fält</div>';
       document.getElementById('addToListBtn').classList.add('disabled');
       document.getElementById('marginPreview').textContent = '— kr';
@@ -2310,7 +2405,10 @@ function calculate() {
   // Vikt
   const tipVikt = `${dimString(d)}\nVolym: ${(volM3*1e6).toFixed(2)} cm³/st\n× ${state.density.toLocaleString('sv-SE')} kg/m³\n= ${fmt(weightKg)} kg/st`;
   rows += row('Vikt / st', `${fmt(weightKg)} kg`, '', tipVikt);
-  rows += row('Material / st', fmt(matCost) + ' kr', '', fmt(weightKg) + ' kg × ' + fmt(P) + ' kr/kg\n= ' + fmt(matCost) + ' kr');
+  const priceLabel = state.priceUnit === 'm'
+    ? fmt(weightKg) + ' kg · ' + fmt(P_base) + ' kr/m (' + fmt(P) + ' kr/kg)\n= ' + fmt(matCost) + ' kr'
+    : fmt(weightKg) + ' kg × ' + fmt(P) + ' kr/kg\n= ' + fmt(matCost) + ' kr';
+  rows += row('Material / st', fmt(matCost) + ' kr', '', priceLabel);
 
   if (state.cutEnabled) {
     if (isPlat) {
@@ -2449,6 +2547,8 @@ function enableDetailMode() {
 
 function syncGrovMode() {
   const g = state.grovEnabled;
+  // For non-plat types grovCard is hidden — don't dim cut/labour/margin
+  if (state.type !== 'plat' && g) return;
   ['cutCard','labourToggleRow','marginToggleRow'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.style.opacity = g ? '0.4' : '1'; el.style.pointerEvents = g ? 'none' : 'auto'; }
@@ -2609,7 +2709,8 @@ function setupInputListeners() {
     const _d = getDims();
     const _P = parseFloat(document.getElementById('kgprice')?.value) || 0;
     if (dimsValid(_d) && _P >= 1) {
-      wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + ' kr/kg');
+      const _unit = state.priceUnit === 'm' ? ' kr/m' : ' kr/kg';
+      wizUpdateSummary(3, dimString(_d) + ' · ' + _P.toLocaleString('sv-SE') + _unit);
       wizAdvance(3);
       wizSetState(4, 'active');
     }
@@ -2633,7 +2734,8 @@ function addToList() {
   const finishMult = (state.type === 'rundstang')
     ? (RUNDSTANG_FINISH.find(f => f.key === state.rundstangFinish)?.mult || 1.0)
     : 1.0;
-  const P = P_baseA * finishMult;
+  const P_kgA = getPricePerKg(d);
+  const P = P_kgA * finishMult;
   if (!dimsValid(d) || !P_baseA) return;
   const QTY = d.QTY || 1;
 
@@ -2650,7 +2752,7 @@ function addToList() {
       sub: typeLabel + ' · Grov', qty: QTY,
       pricePerSt: sellA, weightPerSt: wKgA,
       snap: {
-        type:state.type, mat:state.mat, density:state.density, d, P:P_baseA,
+        type:state.type, mat:state.mat, density:state.density, d, P:P_baseA, priceUnit:state.priceUnit,
         finish:state.rundstangFinish, grovEnabled:true,
         grovMatMarkup:document.getElementById('grovMatMarkup').value,
         grovProdMarkup:document.getElementById('grovProdMarkup').value,
@@ -2686,19 +2788,20 @@ function addToList() {
       const rate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d));
       cutCost = cutLenM * rate;
     } else {
-      const rate = parseFloat(document.getElementById('cutRate').value) || 25;
-      cutCost = QTY * rate;
+      const scA  = calcStockBars(d);
+      const rate = parseFloat(document.getElementById('cutRate').value) || calcSawRate(state.type, d);
+      cutCost = scA.cuts * rate;  // per order
     }
   }
 
-  let labourCost = 0;
+  let labourCost = 0, labourCutCost = 0, labourHandleCost = 0;
   if (state.labourEnabled) {
     const lrh  = parseFloat(document.getElementById('labourRate').value)||450;
     const setup= parseFloat(document.getElementById('setupTime').value)||0;
     const cam  = parseFloat(document.getElementById('camTime').value)||0;
     const hand = parseFloat(document.getElementById('handleTime').value)||0;
     const lpm  = lrh/60;
-    let ctm = 0;
+    let cutTimeMin = 0;
     if (state.cutEnabled && isPlat) {
       const T2=getThickness(d); const useGas=isGasMethod(T2);
       const tbl=useGas?GAS_SPD:PLASMA_SPD; let spd=lookupSpd(T2,tbl);
@@ -2706,14 +2809,16 @@ function addToList() {
       const cl = (parseFloat(document.getElementById('cutLength').value)||0)>0
         ? parseFloat(document.getElementById('cutLength').value)/1000
         : getPerimeter(d)/1000;
-      ctm = (cl*1000)/spd;
+      cutTimeMin = (cl*1000)/spd;
+      labourCutCost = cutTimeMin * lpm * QTY;
     } else if (state.cutEnabled && !isPlat) {
-      // 2 min per stång, inte per detalj
-      const scAdd = calcStockBars(d);
-      ctm = 2 * scAdd.bars / Math.max(1, QTY); // omvandla till per-detalj-ekvivalent för kostnadsberäkning
+      const scA2 = calcStockBars(d);
+      cutTimeMin = 2; // min per stång
+      labourCutCost = cutTimeMin * lpm * scA2.bars;
     }
-    const setupCostA = (setup+cam)*lpm;
-    labourCost = (ctm*lpm*QTY) + (hand*lpm*QTY); // setup excluded from per-item
+    const labourSetup = (setup+cam)*lpm;
+    labourHandleCost = hand * lpm * QTY;
+    labourCost = labourCutCost + labourHandleCost; // setup handled separately per order
   }
 
   const setupCostItem = state.labourEnabled
@@ -2721,7 +2826,10 @@ function addToList() {
        (parseFloat(document.getElementById('camTime').value)||0)) *
       ((parseFloat(document.getElementById('labourRate').value)||450)/60)
     : 0;
-  const inCost = matCost + cutCost + labourCost;
+
+  // inCost = total orderkostnad (matCost*QTY + cut + labour)
+  const matCostOrder = matCost * QTY;
+  const inCost = matCostOrder + cutCost + labourCost;
   let marginCost = 0;
   if (state.marginEnabled) {
     const MRG = parseFloat(document.getElementById('marginPct').value)||0;

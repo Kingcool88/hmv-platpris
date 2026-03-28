@@ -620,6 +620,27 @@ body.light .input-wrap select {
   font-weight: 700;
 }
 
+
+/* REDIGERING */
+.cancel-edit-btn {
+  width: 100%;
+  background: none;
+  border: 1.5px solid var(--accent2);
+  border-radius: var(--radius);
+  color: var(--accent2);
+  font-family: 'Roboto Mono', monospace;
+  font-size: .8rem;
+  letter-spacing: 1px;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.quote-row.editing {
+  border-left: 3px solid var(--accent);
+  background: rgba(240,165,0,.06);
+}
+
 </style>
 </head>
 <body>
@@ -900,8 +921,9 @@ body.light .input-wrap select {
 
   <!-- LÄGG TILL I LISTA -->
   <button class="add-btn disabled" id="addToListBtn" onclick="addToList()">
-    <span style="font-size:1.3rem;line-height:1;">+</span> LÄGG TILL I LISTA
+    <span id="addBtnIcon" style="font-size:1.3rem;line-height:1;">+</span> <span id="addBtnLabel">LÄGG TILL I LISTA</span
   </button>
+  <button class="cancel-edit-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none;">✕ Avbryt redigering</button>
 
   <!-- OFFERTLISTA -->
   <div id="quoteListWrap" style="display:none;">
@@ -1754,6 +1776,7 @@ const state = {
   marginEnabled: false,
   grovEnabled: true,
   priceUnit: 'kg',
+  editingId: null,
   lastCalc: null,
   stockLengthMm: 6000,
   stockToleranceMm: 30,
@@ -1793,6 +1816,11 @@ function switchType(type) {
   state.type = type;
   state.cutRateUserEdited = false;
   if (type !== 'rundstang') state.rundstangFinish = 'ra';
+
+  // Markera rätt typ-knapp
+  document.querySelectorAll('.type-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.type === type)
+  );
 
   // Materialval
   renderMatGrid(type);
@@ -1838,24 +1866,21 @@ function switchType(type) {
     }
   }
 
-  // Skärkortet: plåt = brännning, resten = sågning
+  // Skärkortet: plåt = bränning, resten = sågning
   const isPlat = type === 'plat';
-  document.getElementById('cutCardTitle').textContent = isPlat ? 'Skärkostnad' : 'Sågkostnad';
-  document.getElementById('cutToggleLabel').textContent = isPlat ? 'Inkludera skärkostnad' : 'Inkludera sågkostnad';
-  document.getElementById('cutLengthWrap').style.display = isPlat ? '' : 'none';
-
-  // Hantering-label
-  document.getElementById('handleTimeLabel').textContent = isPlat ? 'Nedlägg+grad min/st' : 'Nedlägg+burr min/st';
+  const _e = id => document.getElementById(id);
+  if (_e('cutCardTitle'))    _e('cutCardTitle').textContent    = isPlat ? 'Skärkostnad' : 'Sågkostnad';
+  if (_e('cutToggleLabel'))  _e('cutToggleLabel').textContent  = isPlat ? 'Inkludera skärkostnad' : 'Inkludera sågkostnad';
+  if (_e('cutLengthWrap'))   _e('cutLengthWrap').style.display = isPlat ? '' : 'none';
+  if (_e('handleTimeLabel')) _e('handleTimeLabel').textContent = isPlat ? 'Nedlägg+grad min/st' : 'Nedlägg+burr min/st';
 
   if (isPlat) {
-    // Plåt: nollställ sågknappen, användaren aktiverar manuellt
     state.cutEnabled = false;
-    document.getElementById('cutToggle').classList.remove('on');
-    document.getElementById('cutInputs').classList.add('disabled');
-    document.getElementById('cutBadgeWrap').style.display = 'none';
-    document.getElementById('cutToggleSub').textContent = 'Ej inkluderat i kg-priset';
+    if (_e('cutToggle'))    _e('cutToggle').classList.remove('on');
+    if (_e('cutInputs'))    _e('cutInputs').classList.add('disabled');
+    if (_e('cutBadgeWrap')) _e('cutBadgeWrap').style.display = 'none';
+    if (_e('cutToggleSub')) _e('cutToggleSub').textContent = 'Ej inkluderat i kg-priset';
   }
-
   syncCutMethod();
   calculate();
 }
@@ -2730,6 +2755,21 @@ function setupInputListeners() {
 // ================================================================
 const quoteList = [];
 
+function cancelEdit() {
+  state.editingId = null;
+  const lbl = document.getElementById('addBtnLabel');
+  const ico = document.getElementById('addBtnIcon');
+  const cnc = document.getElementById('cancelEditBtn');
+  if (lbl) lbl.textContent = 'LÄGG TILL I LISTA';
+  if (ico) ico.textContent = '+';
+  if (cnc) cnc.style.display = 'none';
+  // Reset fields
+  DIM_FIELDS[state.type].forEach(f => { const el = document.getElementById(f.id); if (el) el.value = f.val||''; });
+  document.getElementById('kgprice').value = '';
+  document.querySelectorAll('.quote-row').forEach(r=>r.classList.remove('editing'));
+  switchType('plat');
+}
+
 function addToList() {
   const d       = getDims();
   const P_baseA = parseFloat(document.getElementById('kgprice').value) || 0;
@@ -2842,15 +2882,15 @@ function addToList() {
   const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
   const cutLabel = state.cutEnabled ? (' · ' + (isPlat ? (isGasMethod(getThickness(d))?'Gas':'Plasma') : 'Såg')) : '';
 
-  quoteList.push({
-    id: Date.now(),
+  const newItem = {
+    id: state.editingId || Date.now(),
     title: displayTitle(d),
     sub: typeLabel + cutLabel,
     qty: QTY,
     pricePerSt: sellPerSt,
     setupCost: setupCostItem,
-    setupKey: `${state.mat}__${getThickness(d)}mm`,
-    setupLabel: `${state.mat} ${getThickness(d)} mm`,
+    setupKey: state.mat + '__' + getThickness(d) + 'mm',
+    setupLabel: state.mat + ' ' + getThickness(d) + ' mm',
     weightPerSt: weightKg,
     snap: {
       type:state.type, mat:state.mat, density:state.density, d, P:P_baseA, finish:state.rundstangFinish,
@@ -2864,11 +2904,26 @@ function addToList() {
       marginEnabled:state.marginEnabled,
       marginPct:document.getElementById('marginPct').value,
     }
-  });
+  };
+
+  if (state.editingId) {
+    const idx = quoteList.findIndex(i => i.id === state.editingId);
+    if (idx >= 0) quoteList[idx] = newItem;
+  } else {
+    quoteList.push(newItem);
+  }
 
   renderList();
 
-  // Rensa fälten
+  // Rensa fälten och återställ till startläge
+  state.editingId = null;
+  const lbl2 = document.getElementById('addBtnLabel');
+  const ico2 = document.getElementById('addBtnIcon');
+  const cnc2 = document.getElementById('cancelEditBtn');
+  if (lbl2) lbl2.textContent = 'LÄGG TILL I LISTA';
+  if (ico2) ico2.textContent = '+';
+  if (cnc2) cnc2.style.display = 'none';
+  document.querySelectorAll('.quote-row').forEach(r=>r.classList.remove('editing'));
   DIM_FIELDS[state.type].forEach(f => {
     const el = document.getElementById(f.id);
     if (el) el.value = f.val || '';
@@ -2876,10 +2931,9 @@ function addToList() {
   document.getElementById('kgprice').value = '';
   document.getElementById('cutLength').value = '';
   state.cutRateUserEdited = false;
-  // Återställ alltid grovberäkning till PÅ för nästa artikel
-  state.grovEnabled = true;
-  document.getElementById('grovToggle').classList.add('on');
-  syncGrovMode();
+  // Återgå till produktval (plåt som default) för nästa artikel
+  switchType('plat');
+  window.scrollTo({top: 0, behavior: 'smooth'});
   document.getElementById('addToListBtn').classList.add('disabled');
   document.getElementById('resultArea').innerHTML = '<div class="empty-state"><div class="es-icon">⚙</div>Fyll i dimensioner och pris</div>';
   document.getElementById('marginPreview').textContent = '— kr';
@@ -3043,8 +3097,16 @@ function restoreFromList(id) {
     syncCutMethod(); calculate();
     window.scrollTo({top:0,behavior:'smooth'});
     document.querySelectorAll('.quote-row').forEach(r=>r.classList.remove('editing'));
-    const re = document.querySelector(`[data-qid="${id}"]`);
+    const re = document.querySelector('[data-qid="' + id + '"]');
     if (re) re.classList.add('editing');
+    // Switch to edit mode
+    state.editingId = id;
+    const lbl = document.getElementById('addBtnLabel');
+    const ico = document.getElementById('addBtnIcon');
+    const cnc = document.getElementById('cancelEditBtn');
+    if (lbl) lbl.textContent = 'SPARA ÄNDRINGAR';
+    if (ico) ico.textContent = '✎';
+    if (cnc) cnc.style.display = 'block';
   }, 50);
 }
 

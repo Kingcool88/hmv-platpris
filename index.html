@@ -836,8 +836,8 @@ body.light .input-wrap select {
         </div>
       </div>
       <div class="cut-note" style="margin-top:8px;">
-        Slutpris = (vikt × kr/kg × (1 + mat%)) × (1 + prod%)<br>
-        Skärning, personal och marginal-kortet används ej i grovläge.
+        Slutpris = (material × (1 + mat%) + personal[auto]) × (1 + prod%)<br>
+        Skärning och marginal-kortet används ej i grovläge — personalkostnad (upplägg+hantering) räknas dock in automatiskt med standardtider.
       </div>
     </div>
   </div>
@@ -996,7 +996,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.1.0';
+const PLATPRIS_VERSION = '1.2.0';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -1055,8 +1055,9 @@ function buildExplain(lc) {
       {formula:`${fmt(lc.weightKg)} kg × ${fmt(lc.P)} kr/kg`, result:`${fmt(lc.matCost)} kr`},
     ]);
     html += section('Påslag', [
-      {formula:`${fmt(lc.matCost)} kr × (1 + ${lc.matMup}%)  →  Materialpåslag`, result:`${fmt(lc.t15)} kr`, cls:'cut'},
-      {formula:`${fmt(lc.t15)} kr × (1 + ${lc.prodMup}%)  →  Produktpåslag`, result:`${fmt(lc.sellSt)} kr/st`, cls:'accent'},
+      {formula:`${fmt(lc.matCost)} kr/st × ${lc.QTY} st × (1 + ${lc.matMup}%)  →  Materialpåslag`, result:`${fmt(lc.matSubtotal)} kr`, cls:'cut'},
+      {formula:`+ Personal (upplägg+CAM+hantering, auto)`, result:`${fmt(lc.labourCostG)} kr`, cls:'labour'},
+      {formula:`(${fmt(lc.matSubtotal)} + ${fmt(lc.labourCostG)}) × (1 + ${lc.prodMup}%) ÷ ${lc.QTY} st  →  Produktpåslag`, result:`${fmt(lc.sellSt)} kr/st`, cls:'accent'},
     ]);
     if (lc.QTY > 1)
       html += section('Totalt', [{formula:`${fmt(lc.sellSt)} kr/st × ${lc.QTY} st`, result:`${fmt(lc.sellTot)} kr`, cls:'accent'}]);
@@ -2526,8 +2527,17 @@ function calculate() {
       sawCostG = scG.cuts * sawRate;
     }
 
-    const matOrderG = matCostG * QTY;
-    const t15      = (matOrderG + sawCostG) * (1 + matMup);
+    // Personal (upplägg+CAM+hantering) — grov gissar med automatiska
+    // standardtider, annars blir grovpriset orimligt lågt för små ordrar
+    // (fast uppläggskostnad slår igenom mest relativt sett då).
+    const hdG    = getHandlingDefaults(state.type, d);
+    const lrhG   = parseFloat(document.getElementById('labourRate').value) || 450;
+    const lpmG   = lrhG / 60;
+    const labourCostG = (hdG.setupMin + hdG.camMin) * lpmG + hdG.handleMin * lpmG * QTY;
+
+    const matOrderG    = matCostG * QTY;
+    const matSubtotalG = (matOrderG + sawCostG) * (1 + matMup);
+    const t15      = matSubtotalG + labourCostG;
     const sellTotG = t15 * (1 + prodMup);
     const sellStG  = sellTotG / QTY;
     const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -2546,10 +2556,12 @@ function calculate() {
       gRows += gRow('Sågning ' + scG2.cuts + ' snitt', fmt(sawCostG) + ' kr', 'cut',
         scG2.cuts + ' snitt × ' + calcSawRate(state.type, d) + ' kr/snitt\n= ' + fmt(sawCostG) + ' kr');
     }
-    gRows += gRow('Mat.påslag ' + (matMup*100).toFixed(0) + '%', fmt(t15) + ' kr', 'cut',
-      '(' + fmt(matOrderG) + (sawCostG>0?' + ' + fmt(sawCostG):'') + ') × (1 + ' + (matMup*100).toFixed(0) + '%)\n= ' + fmt(t15) + ' kr');
+    gRows += gRow('Mat.påslag ' + (matMup*100).toFixed(0) + '%', fmt(matSubtotalG) + ' kr', 'cut',
+      '(' + fmt(matOrderG) + (sawCostG>0?' + ' + fmt(sawCostG):'') + ') × (1 + ' + (matMup*100).toFixed(0) + '%)\n= ' + fmt(matSubtotalG) + ' kr');
+    gRows += gRow('Personal (upplägg+hantering)', fmt(labourCostG) + ' kr', 'labour',
+      'Upplägg+CAM: ' + (hdG.setupMin+hdG.camMin).toFixed(0) + ' min × ' + fmt(lpmG) + ' kr/min\n+ Hantering: ' + hdG.handleMin + ' min × ' + QTY + ' st × ' + fmt(lpmG) + ' kr/min\n= ' + fmt(labourCostG) + ' kr\n(auto — samma standardtider som detaljerad kalkyl)');
     gRows += gRow('Prod.påslag ' + (prodMup*100).toFixed(0) + '%', fmt(sellStG) + ' kr/st', 'sell',
-      fmt(t15) + ' × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
+      '(' + fmt(matSubtotalG) + ' + ' + fmt(labourCostG) + ') × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
     if (QTY > 1) gRows += gRow('Antal · tot vikt', QTY + ' st · ' + fmt(wKg*QTY) + ' kg', '',
       QTY + ' st × ' + fmt(wKg) + ' kg = ' + fmt(wKg*QTY) + ' kg');
 
@@ -2569,7 +2581,7 @@ function calculate() {
       grov:true, dimStr:displayTitle(d), QTY,
       volCm3:volM3g*1e6, density:state.density,
       weightKg:wKg, P, matCost:wKg*P,
-      sawCostG,
+      sawCostG, labourCostG, matSubtotal:matSubtotalG,
       matMup:(parseFloat(document.getElementById('grovMatMarkup').value)||0),
       prodMup:(parseFloat(document.getElementById('grovProdMarkup').value)||0),
       t15,
@@ -2878,8 +2890,15 @@ function calculate() {
 // TOGGLES
 // ================================================================
 function enableDetailMode() {
-  // Skärning styrs INTE härifrån — "Inkludera skärkostnad" ska förbli
-  // precis som användaren själv satt den när man växlar grovläge av/på.
+  // Skärning
+  if (!state.cutEnabled) {
+    state.cutEnabled = true;
+    document.getElementById('cutToggle').classList.add('on');
+    document.getElementById('cutInputs').classList.remove('disabled');
+    document.getElementById('cutBadgeWrap').style.display = 'block';
+    document.getElementById('cutToggleSub').textContent = 'Beräknas separat och läggs på';
+    syncCutMethod();
+  }
   // Personal
   if (!state.labourEnabled) {
     state.labourEnabled = true;
@@ -3027,7 +3046,7 @@ function setupToggles() {
     state.grovEnabled = !state.grovEnabled;
     document.getElementById('grovToggle').classList.toggle('on', state.grovEnabled);
 
-    // Aktivera personal och marginal automatiskt (skärkostnad rörs ej — styrs separat)
+    // Aktivera skärning, personal och marginal automatiskt när man går ur grovläge
     if (!state.grovEnabled) enableDetailMode();
 
     syncGrovMode();
@@ -3153,8 +3172,18 @@ function addToList() {
     const matMupA  = (parseFloat(document.getElementById('grovMatMarkup').value)  || 0) / 100;
     const prodMupA = (parseFloat(document.getElementById('grovProdMarkup').value) || 0) / 100;
     const wKgA     = calcVolume(d) * state.density;
-    const sellA    = wKgA * P * (1 + matMupA) * (1 + prodMupA);
+    const matCostA_g = wKgA * P;
+    let sawCostA_g = 0;
+    if (state.type !== 'plat') {
+      const scA_g = calcStockBars(d);
+      sawCostA_g = scA_g.cuts * calcSawRate(state.type, d);
+    }
+    const hdA_g  = getHandlingDefaults(state.type, d);
     const labourRateForSnap = parseFloat(document.getElementById('labourRate').value)||450;
+    const lpmA_g = labourRateForSnap / 60;
+    const labourCostA_g = (hdA_g.setupMin + hdA_g.camMin) * lpmA_g + hdA_g.handleMin * lpmA_g * QTY;
+    const matSubtotalA_g = (matCostA_g * QTY + sawCostA_g) * (1 + matMupA);
+    const sellA = ((matSubtotalA_g + labourCostA_g) * (1 + prodMupA)) / QTY;
   const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
     quoteList.push({
       id: Date.now(), title: displayTitle(d),

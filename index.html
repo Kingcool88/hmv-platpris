@@ -1038,7 +1038,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.4.0';
+const PLATPRIS_VERSION = '1.5.0';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -1098,7 +1098,10 @@ function buildExplain(lc) {
     ]);
     html += section('Påslag', [
       {formula:`${fmt(lc.matCost)} kr/st × ${lc.QTY} st × (1 + ${lc.matMup}%)  →  Materialpåslag`, result:`${fmt(lc.matSubtotal)} kr`, cls:'cut'},
-      {formula:`+ Personal (upplägg+CAM+hantering, auto)`, result:`${fmt(lc.labourCostG)} kr`, cls:'labour'},
+      {formula: lc.existingGroupQty > 0
+        ? `+ Upplägg+CAM (delat med ${lc.existingGroupQty} st annat i listan)`
+        : `+ Upplägg+CAM`, result:`${fmt(lc.setupCost)} kr`, cls:'labour'},
+      {formula:`+ Nedläggning+gradning (görs på varje bit, delas ej)`, result:`${fmt(lc.handlingCost)} kr`, cls:'labour'},
       {formula:`(${fmt(lc.matSubtotal)} + ${fmt(lc.labourCostG)}) × (1 + ${lc.prodMup}%) ÷ ${lc.QTY} st  →  Produktpåslag`, result:`${fmt(lc.sellSt)} kr/st`, cls:'accent'},
     ]);
     if (lc.QTY > 1)
@@ -2665,10 +2668,20 @@ function calculate() {
     // Personal (upplägg+CAM+hantering) — grov gissar med automatiska
     // standardtider, annars blir grovpriset orimligt lågt för små ordrar
     // (fast uppläggskostnad slår igenom mest relativt sett då).
+    // Upplägg+CAM delas med andra rader (grov såväl som detaljerad) i
+    // offertlistan med samma material+tjocklek — nedläggning/gradning görs
+    // på varje bit oavsett och delas därför INTE.
     const hdG    = getHandlingDefaults(state.type, d);
     const lrhG   = parseFloat(document.getElementById('labourRate').value) || 450;
     const lpmG   = lrhG / 60;
-    const labourCostG = (hdG.setupMin + hdG.camMin) * lpmG + hdG.handleMin * lpmG * QTY;
+    const setupCostFullG = (hdG.setupMin + hdG.camMin) * lpmG;
+    const setupKeyG = state.mat + '__' + getThickness(d) + 'mm';
+    let existingGroupQtyG = 0;
+    quoteList.forEach(it => { if (it.setupKey === setupKeyG && it.id !== state.editingId) existingGroupQtyG += it.qty; });
+    const totalGroupQtyG = existingGroupQtyG + QTY;
+    const setupCostG = existingGroupQtyG > 0 ? setupCostFullG * (QTY / totalGroupQtyG) : setupCostFullG;
+    const handlingCostG = hdG.handleMin * lpmG * QTY;
+    const labourCostG = setupCostG + handlingCostG;
 
     const matOrderG    = matCostG * QTY;
     const matSubtotalG = (matOrderG + sawCostG) * (1 + matMup);
@@ -2693,8 +2706,10 @@ function calculate() {
     }
     gRows += gRow('Mat.påslag ' + (matMup*100).toFixed(0) + '%', fmt(matSubtotalG) + ' kr', 'cut',
       '(' + fmt(matOrderG) + (sawCostG>0?' + ' + fmt(sawCostG):'') + ') × (1 + ' + (matMup*100).toFixed(0) + '%)\n= ' + fmt(matSubtotalG) + ' kr');
-    gRows += gRow('Personal (upplägg+hantering)', fmt(labourCostG) + ' kr', 'labour',
-      'Upplägg+CAM: ' + (hdG.setupMin+hdG.camMin).toFixed(0) + ' min × ' + fmt(lpmG) + ' kr/min\n+ Hantering: ' + hdG.handleMin + ' min × ' + QTY + ' st × ' + fmt(lpmG) + ' kr/min\n= ' + fmt(labourCostG) + ' kr\n(auto — samma standardtider som detaljerad kalkyl)');
+    gRows += gRow(existingGroupQtyG > 0 ? 'Upplägg+CAM (delat med ' + existingGroupQtyG + ' st i listan)' : 'Upplägg+CAM', fmt(setupCostG) + ' kr', 'labour',
+      (hdG.setupMin+hdG.camMin).toFixed(0) + ' min × ' + fmt(lpmG) + ' kr/min' + (existingGroupQtyG > 0 ? '\n÷ delat på ' + totalGroupQtyG + ' st totalt i gruppen' : '') + '\n= ' + fmt(setupCostG) + ' kr\n(auto — samma standardtider som detaljerad kalkyl)');
+    gRows += gRow('Nedläggning+gradning', fmt(handlingCostG) + ' kr', 'labour',
+      hdG.handleMin + ' min × ' + QTY + ' st × ' + fmt(lpmG) + ' kr/min\n= ' + fmt(handlingCostG) + ' kr\n(görs på varje bit, delas ej)');
     gRows += gRow('Prod.påslag ' + (prodMup*100).toFixed(0) + '%', fmt(sellStG) + ' kr/st', 'sell',
       '(' + fmt(matSubtotalG) + ' + ' + fmt(labourCostG) + ') × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
     if (QTY > 1) gRows += gRow('Antal · tot vikt', QTY + ' st · ' + fmt(wKg*QTY) + ' kg', '',
@@ -2716,7 +2731,8 @@ function calculate() {
       grov:true, dimStr:displayTitle(d), QTY,
       volCm3:volM3g*1e6, density:state.density,
       weightKg:wKg, P, matCost:wKg*P,
-      sawCostG, labourCostG, matSubtotal:matSubtotalG,
+      sawCostG, labourCostG, setupCost:setupCostG, handlingCost:handlingCostG,
+      existingGroupQty:existingGroupQtyG, matSubtotal:matSubtotalG,
       matMup:(parseFloat(document.getElementById('grovMatMarkup').value)||0),
       prodMup:(parseFloat(document.getElementById('grovProdMarkup').value)||0),
       t15,
@@ -3346,21 +3362,29 @@ function addToList() {
     const hdA_g  = getHandlingDefaults(state.type, d);
     const labourRateForSnap = parseFloat(document.getElementById('labourRate').value)||450;
     const lpmA_g = labourRateForSnap / 60;
-    const labourCostA_g = (hdA_g.setupMin + hdA_g.camMin) * lpmA_g + hdA_g.handleMin * lpmA_g * QTY;
+    // Upplägg+CAM är en engångskostnad per körning och delas med andra rader
+    // (grov såväl som detaljerad) med samma material+tjocklek — se renderList().
+    // Nedläggning/gradning görs däremot på varje bit oavsett, så den delas INTE.
+    const setupCostA_g = (hdA_g.setupMin + hdA_g.camMin) * lpmA_g;
+    const handlingCostA_g = hdA_g.handleMin * lpmA_g * QTY;
     const matSubtotalA_g = (matCostA_g * QTY + sawCostA_g) * (1 + matMupA);
-    const sellA = ((matSubtotalA_g + labourCostA_g) * (1 + prodMupA)) / QTY;
+    const sellA = ((matSubtotalA_g + handlingCostA_g) * (1 + prodMupA)) / QTY; // exkl. upplägg
   const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
     quoteList.push({
       id: Date.now(), title: displayTitle(d),
       sub: typeLabel + ' · Grov', qty: QTY,
       pricePerSt: sellA, weightPerSt: wKgA,
+      setupCost: setupCostA_g,
+      setupKey: state.mat + '__' + getThickness(d) + 'mm',
+      setupLabel: state.mat + ' ' + getThickness(d) + ' mm',
+      marginEnabled: true, marginPct: prodMupA * 100,
       snap: {
         type:state.type, mat:state.mat, density:state.density, d, P:P_baseA, priceUnit:state.priceUnit, spillEnabled:state.spillEnabled,
         finish:state.rundstangFinish, grovEnabled:true,
         grovMatMarkup:document.getElementById('grovMatMarkup').value,
         grovProdMarkup:document.getElementById('grovProdMarkup').value,
         cutEnabled:false, cutLength:'', cutRate:'45', cutRateUserEdited:false,
-        labourEnabled:false, labourRate:'450', setupTime:'10', camTime:'5', handleTime:'3',
+        labourEnabled:false, labourRate:labourRateForSnap.toString(), setupTime:'10', camTime:'5', handleTime:'3',
         marginEnabled:false, marginPct:'25',
       }
     });
@@ -3689,7 +3713,7 @@ function copyList() {
     }
     const rt = finalPerSt*item.qty;
     total+=rt; weight+=item.weightPerSt*item.qty; qty+=item.qty;
-    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(finalPerSt)} kr/st  =  ${fmt(rt)} kr${setupNote}\n`;
+    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(finalPerSt)} kr/st  =  ${fmt(rt)} kr${setupNote}\n\n`;
   });
   text += `${'─'.repeat(34)}\nTOTALT: ${fmt(total)} kr\n(${qty} st · ${fmt(weight)} kg)\n`;
   if (navigator.clipboard?.writeText) {

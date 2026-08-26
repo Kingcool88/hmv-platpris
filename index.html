@@ -1038,7 +1038,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.3.1';
+const PLATPRIS_VERSION = '1.4.0';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -2138,6 +2138,8 @@ function init() {
   setupInputListeners();
   applyTheme();
   checkForUpdate();
+  loadQuoteList();
+  renderList();
 }
 
 // ================================================================
@@ -3251,6 +3253,19 @@ function setupInputListeners() {
 // OFFERTLISTA
 // ================================================================
 const quoteList = [];
+const QUOTE_STORAGE_KEY = 'hmv_platpris_quotelist';
+
+function saveQuoteList() {
+  try { localStorage.setItem(QUOTE_STORAGE_KEY, JSON.stringify(quoteList)); } catch {}
+}
+function loadQuoteList() {
+  try {
+    const raw = localStorage.getItem(QUOTE_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) quoteList.push(...parsed);
+  } catch {}
+}
 
 function cancelEdit() {
   resetForm();
@@ -3501,6 +3516,7 @@ function calcSetupGroups() {
 }
 
 function renderList() {
+  saveQuoteList();
   const wrap   = document.getElementById('quoteListWrap');
   const rowsEl = document.getElementById('quoteRows');
   if (quoteList.length === 0) { wrap.style.display='none'; return; }

@@ -996,7 +996,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.2.0';
+const PLATPRIS_VERSION = '1.2.1';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -2090,6 +2090,9 @@ function renderTypeGrid() {
     if (!btn) return;
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    // Klick på en redan vald typ ska inte nollställa skärkostnad/personal/
+    // marginal igen — switchType() kör en full reset avsedd för ett byte.
+    if (btn.dataset.type === state.type) return;
     switchType(btn.dataset.type);
   });
 }
@@ -2204,6 +2207,9 @@ function renderMatGrid(type) {
     if (!btn) return;
     grid.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    // Klick på ett redan valt material ska inte skriva över ett pris
+    // användaren själv redan ändrat.
+    if (btn.dataset.mat === state.mat) return;
     state.mat = btn.dataset.mat;
     state.density = parseInt(btn.dataset.density);
     state.cutRateUserEdited = false;

@@ -1038,7 +1038,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.3.0';
+const PLATPRIS_VERSION = '1.3.1';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -1137,8 +1137,10 @@ function buildExplain(lc) {
       labRows.push({formula:`${fmtS(lc.cutTimeMin)} min × ${lc.QTY} st × ${fmt(lc.labourPerMin)} kr/min`, result:`${fmt(lc.labourCutCost)} kr`, cls:'labour'});
     }
     labRows.push({formula:`Nedlägg+gradning: ${lc.handleMin} min/st × ${lc.QTY} st × ${fmt(lc.labourPerMin)} kr/min`, result:`${fmt(lc.labourHandleCost)} kr`, cls:'labour'});
-    labRows.push({formula:`Upplägg+CAM visas separat i offertlistan`, result:`${fmt(lc.setupCost)} kr *(per tjocklek)`, cls:'labour'});
-    labRows.push({formula:`Personalkostnad (exkl. upplägg)`, result:`${fmt(lc.labourCost)} kr`, cls:'labour'});
+    labRows.push({formula: lc.existingGroupQty > 0
+      ? `Upplägg+CAM (delat med ${lc.existingGroupQty} st annat i listan, samma material+tjocklek)`
+      : `Upplägg+CAM`, result:`${fmt(lc.setupCost)} kr`, cls:'labour'});
+    labRows.push({formula:`Personalkostnad totalt`, result:`${fmt(lc.labourCost)} kr`, cls:'labour'});
     html += section('Personal', labRows);
   }
 
@@ -2792,7 +2794,7 @@ function calculate() {
   }
 
   // Personal
-  let labourCost=0, labourCutCost=0, labourSetupCost=0, labourHandleCost=0, cutTimeMin=0;
+  let labourCost=0, labourCutCost=0, labourSetupCost=0, labourHandleCost=0, cutTimeMin=0, existingGroupQty=0;
   if (state.labourEnabled) {
     const lrh  = parseFloat(document.getElementById('labourRate').value) || 450;
     const setup= parseFloat(document.getElementById('setupTime').value)  || 0;
@@ -2815,7 +2817,15 @@ function calculate() {
         labourCutCost = cutTimeMin * lpm * scL.bars;
       }
     }
-    labourSetupCost  = (setup + cam) * lpm;
+    // Upplägget delas med andra rader i offertlistan som redan har samma
+    // material+tjocklek (samma körning/plåt) — förhandsvisningen ska visa
+    // samma delade pris som raden faktiskt får när den läggs till/ligger i
+    // listan, inte hela uppläggskostnaden som om den vore ensam.
+    const setupCostFull = (setup + cam) * lpm;
+    const setupKeyPreview = state.mat + '__' + getThickness(d) + 'mm';
+    quoteList.forEach(it => { if (it.setupKey === setupKeyPreview && it.id !== state.editingId) existingGroupQty += it.qty; });
+    const totalGroupQty = existingGroupQty + QTY;
+    labourSetupCost  = existingGroupQty > 0 ? setupCostFull * (QTY / totalGroupQty) : setupCostFull;
     labourHandleCost = hand * lpm * QTY;
     labourCost = labourCutCost + labourSetupCost + labourHandleCost;
 
@@ -2824,9 +2834,12 @@ function calculate() {
         ? `${fmt(labourCutCost)} kr (${(cutTimeMin*QTY).toFixed(1)} min)`
         : '— kr';
 
+    const setupRowLabel = existingGroupQty > 0
+      ? `Upplägg + CAM (delat med ${existingGroupQty} st i listan)`
+      : `Upplägg + CAM (${(setup+cam).toFixed(0)} min)`;
     document.getElementById('labourBreakdown').innerHTML =
       `<div class="info-row"><span>Bearbetningstid (lön)</span><span>${fmt(labourCutCost)} kr</span></div>` +
-      `<div class="info-row"><span>Upplägg + CAM (${(setup+cam).toFixed(0)} min)</span><span>${fmt(labourSetupCost)} kr</span></div>` +
+      `<div class="info-row"><span>${setupRowLabel}</span><span>${fmt(labourSetupCost)} kr</span></div>` +
       `<div class="info-row"><span>Nedlägg + gradning (${hand} min × ${QTY} st)</span><span>${fmt(labourHandleCost)} kr</span></div>`;
   } else {
     document.getElementById('labourCutVal').textContent = '— kr';
@@ -3004,7 +3017,7 @@ function calculate() {
     labourPerMin: (parseFloat(document.getElementById('labourRate').value)||450)/60,
     handleMin: parseFloat(document.getElementById('handleTime').value)||0,
     labourCutCost, labourHandleCost, labourCost,
-    setupCost: labourSetupCost,
+    setupCost: labourSetupCost, existingGroupQty,
     inCostPerSt: inCost/QTY,  // inCost är nu per order
     marginEnabled: state.marginEnabled, MRG,
     marginPerSt: marginCost/QTY,
@@ -3614,13 +3627,15 @@ function restoreFromList(id) {
     document.getElementById('marginPct').disabled = !s.marginEnabled;
     document.getElementById('marginPct').value = s.marginPct;
 
+    // Switch to edit mode — måste sättas INNAN calculate() så att
+    // förhandsvisningens uppläggsdelning utesluter raden från sig själv
+    // (annars räknas den dubbelt mot sin egen gamla plats i listan).
+    state.editingId = id;
     syncCutMethod(); calculate();
     window.scrollTo({top:0,behavior:'smooth'});
     document.querySelectorAll('.quote-row').forEach(r=>r.classList.remove('editing'));
     const re = document.querySelector('[data-qid="' + id + '"]');
     if (re) re.classList.add('editing');
-    // Switch to edit mode
-    state.editingId = id;
     const lbl = document.getElementById('addBtnLabel');
     const ico = document.getElementById('addBtnIcon');
     const cnc = document.getElementById('cancelEditBtn');

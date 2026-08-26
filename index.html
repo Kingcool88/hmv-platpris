@@ -643,6 +643,41 @@ body.light .input-wrap select {
 }
 
 
+/* HÅL */
+.hole-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+.hole-remove-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  width: 38px;
+  height: 39px;
+  cursor: pointer;
+  font-size: 1rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.hole-remove-btn:active { color: var(--accent2); border-color: var(--accent2); }
+.add-hole-btn {
+  width: 100%;
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: 'Roboto Mono', monospace;
+  font-size: .8rem;
+  letter-spacing: 1px;
+  padding: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.add-hole-btn:active { border-color: var(--accent); color: var(--accent); }
+
 /* VERSION */
 .ver-badge {
   font-size: .68rem;
@@ -866,6 +901,13 @@ body.light .input-wrap select {
       </div>
     </div>
     <div class="cut-note" id="cutNote">Ange tjocklek → hastighet och kr/m beräknas automatiskt.</div>
+
+    <div id="holesWrap" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div class="section-label" style="margin-bottom:8px;">Hål (extra bränning)</div>
+      <div id="holesList"></div>
+      <button type="button" class="add-hole-btn" id="addHoleBtn" onclick="addHole()">+ Lägg till hål</button>
+      <div class="cut-note" id="holesNote" style="margin-top:8px;"></div>
+    </div>
   </div>
 
   <!-- OPERATÖR & HANTERING -->
@@ -996,7 +1038,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.2.1';
+const PLATPRIS_VERSION = '1.3.0';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -1074,7 +1116,13 @@ function buildExplain(lc) {
   if (lc.cutEnabled) {
     const cutRows = [];
     if (lc.isPlat) {
-      cutRows.push({formula:`Skärlängd: ${fmt(lc.cutLenM)} m`, result:''});
+      if (lc.holesCount > 0) {
+        cutRows.push({formula:`Kontur: ${fmt(lc.cutLenM - lc.holesLenM)} m`, result:''});
+        cutRows.push({formula:`+ ${lc.holesCount} hål: ${fmt(lc.holesLenM)} m`, result:''});
+        cutRows.push({formula:`Skärlängd totalt`, result:`${fmt(lc.cutLenM)} m`});
+      } else {
+        cutRows.push({formula:`Skärlängd: ${fmt(lc.cutLenM)} m`, result:''});
+      }
       cutRows.push({formula:`${fmt(lc.cutLenM)} m × ${fmt(lc.cutRate)} kr/m  (${lc.cutMethod}, ~${fmtS(lc.cutSpd)} mm/min)`, result:`${fmt(lc.cutCost)} kr`, cls:'cut'});
     } else {
       cutRows.push({formula:`${lc.QTY} snitt × ${fmt(lc.cutRate)} kr/snitt`, result:`${fmt(lc.cutCost)} kr`, cls:'cut'});
@@ -1795,11 +1843,19 @@ function buildMonitorXml() {
   let rows = [];
   let rowNum = 1;
 
+  const setupGroupsX = calcSetupGroups();
   quoteList.forEach(item => {
     const artnr  = lookupArtnr(item);
     const ben    = item.title;
     const status = artnr ? '✓' : '⚠ Ingen match — fritext';
     matchHtml += '<div>' + status + ' ' + item.title + ' → ' + (artnr||'(fritext)') + ': ' + ben + '</div>';
+    // Slutpris/st = radens eget pris + ev. delad andel av uppläggningskostnaden
+    let finalPerSt = item.pricePerSt;
+    const gX = item.setupKey ? setupGroupsX[item.setupKey] : null;
+    if (gX) {
+      const shareAtCost = gX.cost / gX.qty;
+      finalPerSt += item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
+    }
     rows.push(
       '    <ROW>' +
       '<ROWNO>' + (rowNum++) + '</ROWNO>' +
@@ -1807,7 +1863,7 @@ function buildMonitorXml() {
       '<ARTBEN>' + esc(ben) + '</ARTBEN>' +
       '<ANT>' + item.qty + '</ANT>' +
       '<ENH>st</ENH>' +
-      '<APRIS>' + item.pricePerSt.toFixed(2) + '</APRIS>' +
+      '<APRIS>' + finalPerSt.toFixed(2) + '</APRIS>' +
       '<VALKOD>SEK</VALKOD>' +
       '<RABATT>0</RABATT>' +
       '</ROW>'
@@ -2064,6 +2120,7 @@ const state = {
   plateSizeW: 4000,
   plateSizeH: 2000,
   usdSek: 10.5,
+  holes: [], // [{id, d(mm), qty}] — extra bränning för hål (endast plåt + skärkostnad på)
 };
 
 // ================================================================
@@ -2101,6 +2158,8 @@ function switchType(type) {
   const _e = id => document.getElementById(id);
   state.type = type;
   state.cutRateUserEdited = false;
+  state.holes = [];
+  renderHoles();
   if (type !== 'rundstang') state.rundstangFinish = 'ra';
 
   // Markera rätt typ-knapp
@@ -2165,6 +2224,7 @@ function switchType(type) {
     if (_e('cutToggleSub')) _e('cutToggleSub').textContent = 'Ej inkluderat i kg-priset';
   }
   syncCutMethod();
+  syncHolesVisibility();
   calculate();
 }
 
@@ -2394,6 +2454,71 @@ function calcSawRate(type, d) {
   else if (outerDim <= 120) return Math.round(20 + (outerDim-60) * 0.25);
   else if (outerDim <= 250) return Math.round(35 + (outerDim-120) * 0.15);
   else                      return Math.round(55 + (outerDim-250) * 0.08);
+}
+
+// ================================================================
+// HÅL (extra bränning) — endast plåt, kräver skärkostnad på
+// ================================================================
+function getHolesLengthM() {
+  return state.holes.reduce((sum, h) => {
+    const d = parseFloat(h.d) || 0;
+    const qty = parseInt(h.qty) || 0;
+    if (d <= 0 || qty <= 0) return sum;
+    return sum + (Math.PI * d / 1000) * qty; // omkrets per hål × antal, i meter
+  }, 0);
+}
+function getHolesCount() {
+  return state.holes.reduce((sum, h) => sum + (parseInt(h.qty) || 0), 0);
+}
+function syncHolesVisibility() {
+  const wrap = document.getElementById('holesWrap');
+  if (!wrap) return;
+  wrap.style.display = (state.type === 'plat' && state.cutEnabled) ? 'block' : 'none';
+}
+function addHole() {
+  state.holes.push({id: Date.now() + Math.random(), d: '', qty: 1});
+  renderHoles();
+}
+function removeHole(id) {
+  state.holes = state.holes.filter(h => h.id !== id);
+  renderHoles();
+  calculate();
+}
+function updateHole(id, field, val) {
+  const h = state.holes.find(x => x.id === id);
+  if (!h) return;
+  h[field] = field === 'd' ? (parseFloat(val) || 0) : Math.max(1, parseInt(val) || 1);
+  updateHolesNote();
+  calculate();
+}
+function updateHolesNote() {
+  const note = document.getElementById('holesNote');
+  if (!note) return;
+  const count = getHolesCount();
+  const lenM  = getHolesLengthM();
+  note.textContent = count > 0
+    ? `${count} hål totalt · ${lenM.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2})} m extra skärlängd`
+    : '';
+}
+function renderHoles() {
+  const list = document.getElementById('holesList');
+  if (!list) return;
+  list.innerHTML = state.holes.map(h => `
+    <div class="hole-row" data-hole-id="${h.id}">
+      <div class="input-wrap">
+        <label>Diameter mm</label>
+        <input type="number" inputmode="decimal" value="${h.d}" min="0" step="0.5" placeholder="10"
+          oninput="updateHole(${h.id},'d',this.value)">
+      </div>
+      <div class="input-wrap">
+        <label>Antal</label>
+        <input type="number" inputmode="numeric" value="${h.qty}" min="1" step="1"
+          oninput="updateHole(${h.id},'qty',this.value)">
+      </div>
+      <button type="button" class="hole-remove-btn" onclick="removeHole(${h.id})">✕</button>
+    </div>
+  `).join('');
+  updateHolesNote();
 }
 
 function syncCutMethod() {
@@ -2643,7 +2768,7 @@ function calculate() {
   if (state.cutEnabled) {
     if (isPlat) {
       const customLen = parseFloat(document.getElementById('cutLength').value);
-      cutLenM = (customLen > 0 ? customLen : getPerimeter(d)) / 1000;
+      cutLenM = (customLen > 0 ? customLen : getPerimeter(d)) / 1000 + getHolesLengthM();
       const rate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d));
       cutCost  = cutLenM * rate;
       cutMethod = isGasMethod(getThickness(d)) ? 'Gas' : 'Plasma';
@@ -2794,8 +2919,13 @@ function calculate() {
   if (state.cutEnabled) {
     if (isPlat) {
       const rate2 = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat,getThickness(d));
-      rows += row(`${cutMethod} ${fmt(cutLenM)} m`, `${fmt(cutCost)} kr`, 'cut',
-        `${fmt(cutLenM)} m × ${fmt(rate2)} kr/m\n= ${fmt(cutCost)} kr`);
+      const holesLenM = getHolesLengthM();
+      const holesCnt  = getHolesCount();
+      const outlineLenM = cutLenM - holesLenM;
+      const cutTip = holesCnt > 0
+        ? `Kontur: ${fmt(outlineLenM)} m\n+ ${holesCnt} hål: ${fmt(holesLenM)} m\n= ${fmt(cutLenM)} m totalt\n× ${fmt(rate2)} kr/m\n= ${fmt(cutCost)} kr`
+        : `${fmt(cutLenM)} m × ${fmt(rate2)} kr/m\n= ${fmt(cutCost)} kr`;
+      rows += row(`${cutMethod} ${fmt(cutLenM)} m${holesCnt>0?' ('+holesCnt+' hål)':''}`, `${fmt(cutCost)} kr`, 'cut', cutTip);
     } else {
       const rate2 = parseFloat(document.getElementById('cutRate').value) || 25;
       const scRow = calcStockBars(d);
@@ -2863,11 +2993,9 @@ function calculate() {
     weightKg, P, matCost,
     cutEnabled: state.cutEnabled,
     isPlat: state.type==='plat',
-    cutLenM: state.cutEnabled && state.type==='plat'
-      ? (parseFloat(document.getElementById('cutLength').value)||0) > 0
-        ? parseFloat(document.getElementById('cutLength').value)/1000
-        : getPerimeter(d)/1000
-      : 0,
+    cutLenM,
+    holesLenM: state.cutEnabled && state.type==='plat' ? getHolesLengthM() : 0,
+    holesCount: state.cutEnabled && state.type==='plat' ? getHolesCount() : 0,
     cutRate: parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d)),
     cutCost, cutMethod: state.cutEnabled ? (isGasMethod(getThickness(d)) ? 'Gas' : state.type==='plat' ? 'Plasma' : 'Såg') : '',
     cutSpd: (()=>{ const T2=getThickness(d); const useGas=isGasMethod(T2); const tbl=useGas?GAS_SPD:PLASMA_SPD; let s=lookupSpd(T2,tbl); if(!useGas){if(state.mat==='ALU')s*=1.15;if(state.mat==='304')s*=0.75;if(state.mat==='316L')s*=0.70;if(state.mat==='P265GH')s*=0.92;} return s; })(),
@@ -2904,6 +3032,7 @@ function enableDetailMode() {
     document.getElementById('cutBadgeWrap').style.display = 'block';
     document.getElementById('cutToggleSub').textContent = 'Beräknas separat och läggs på';
     syncCutMethod();
+    syncHolesVisibility();
   }
   // Personal
   if (!state.labourEnabled) {
@@ -3021,6 +3150,7 @@ function setupToggles() {
       ? (isPlat ? 'Beräknas från skärlängd och hastighet' : 'Fast kostnad per snitt')
       : 'Ej inkluderat i kg-priset';
     syncCutMethod();
+    syncHolesVisibility();
     calculate();
   });
 
@@ -3142,6 +3272,7 @@ function resetForm() {
   if (_rf('cutInputs'))    _rf('cutInputs').classList.remove('disabled');
   if (_rf('cutBadgeWrap')) _rf('cutBadgeWrap').style.display = 'block';
   syncCutMethod();
+  syncHolesVisibility();
 
   // Clear price and result
   if (_rf('kgprice')) _rf('kgprice').value = '';
@@ -3223,7 +3354,7 @@ function addToList() {
   if (state.cutEnabled) {
     if (isPlat) {
       const customLen = parseFloat(document.getElementById('cutLength').value);
-      const cutLenM   = (customLen>0 ? customLen : getPerimeter(d)) / 1000;
+      const cutLenM   = (customLen>0 ? customLen : getPerimeter(d)) / 1000 + getHolesLengthM();
       const rate = parseFloat(document.getElementById('cutRate').value) || calcCutRate(state.mat, getThickness(d));
       cutCost = cutLenM * rate;
     } else {
@@ -3245,9 +3376,9 @@ function addToList() {
       const T2=getThickness(d); const useGas=isGasMethod(T2);
       const tbl=useGas?GAS_SPD:PLASMA_SPD; let spd=lookupSpd(T2,tbl);
       if(!useGas){if(state.mat==='ALU')spd*=1.15;if(state.mat==='304')spd*=0.75;if(state.mat==='316L')spd*=0.70;if(state.mat==='P265GH')spd*=0.92;}
-      const cl = (parseFloat(document.getElementById('cutLength').value)||0)>0
+      const cl = ((parseFloat(document.getElementById('cutLength').value)||0)>0
         ? parseFloat(document.getElementById('cutLength').value)/1000
-        : getPerimeter(d)/1000;
+        : getPerimeter(d)/1000) + getHolesLengthM();
       cutTimeMin = (cl*1000)/spd;
       labourCutCost = cutTimeMin * lpm * QTY;
     } else if (state.cutEnabled && !isPlat) {
@@ -3255,9 +3386,8 @@ function addToList() {
       cutTimeMin = 2; // min per stång
       labourCutCost = cutTimeMin * lpm * scA2.bars;
     }
-    const labourSetup = (setup+cam)*lpm;
     labourHandleCost = hand * lpm * QTY;
-    labourCost = labourCutCost + labourHandleCost + labourSetup; // upplägg ingår i st-priset
+    labourCost = labourCutCost + labourHandleCost; // upplägg hanteras separat — delas mellan rader i renderList()
   }
 
   const setupCostItem = state.labourEnabled
@@ -3285,31 +3415,35 @@ function addToList() {
   } else {
     matCostOrder = matCostA * QTY;
   }
+  const MRG = parseFloat(document.getElementById('marginPct').value)||0;
   const inCost = matCostOrder + cutCost + labourCost;
   let marginCost = 0;
   if (state.marginEnabled) {
-    const MRG = parseFloat(document.getElementById('marginPct').value)||0;
     marginCost = inCost * (MRG/100);
   }
-  const sellPerSt = (inCost + marginCost) / QTY;
+  const sellPerSt = (inCost + marginCost) / QTY; // exkl. upplägg — delas ut i renderList()
 
   const typeLabel = {plat:'Plåt',ror:'Rör',plattjarn:'Plattjärn',rundstang:'Rundstång',vinkeljarn:'Vinkeljärn',vkr:'VKR'}[state.type];
   const cutLabel = state.cutEnabled ? (' · ' + (isPlat ? (isGasMethod(getThickness(d))?'Gas':'Plasma') : 'Såg')) : '';
+  const holesCntItem = isPlat && state.cutEnabled ? getHolesCount() : 0;
+  const holesLabel = holesCntItem > 0 ? ' · ' + holesCntItem + ' hål' : '';
 
   const newItem = {
     id: state.editingId || Date.now(),
     title: displayTitle(d),
-    sub: typeLabel + cutLabel,
+    sub: typeLabel + cutLabel + holesLabel,
     qty: QTY,
     pricePerSt: sellPerSt,
     setupCost: setupCostItem,
     setupKey: state.mat + '__' + getThickness(d) + 'mm',
     setupLabel: state.mat + ' ' + getThickness(d) + ' mm',
+    marginEnabled: state.marginEnabled, marginPct: MRG,
     weightPerSt: weightKg,
     snap: {
       type:state.type, mat:state.mat, density:state.density, d, P:P_baseA, finish:state.rundstangFinish,
       cutEnabled:state.cutEnabled, cutLength:document.getElementById('cutLength').value,
       cutRate:document.getElementById('cutRate').value, cutRateUserEdited:state.cutRateUserEdited,
+      holes: isPlat ? state.holes.map(h => ({d:h.d, qty:h.qty})) : [],
       labourEnabled:state.labourEnabled,
       labourRate:document.getElementById('labourRate').value,
       setupTime:document.getElementById('setupTime').value,
@@ -3337,27 +3471,53 @@ function addToList() {
   }, 600);
 }
 
+// Delar uppläggningskostnaden (upplägg+CAM) mellan alla rader i offertlistan
+// som har samma material+tjocklek — de bränns/skärs ju i samma körning från
+// samma plåt, så uppställningen ska bara betalas en gång, inte en gång per
+// detaljtyp. Returnerar {key -> kr/st vid full marginal} — margin appliceras
+// per rad utifrån dess egen marginPct nedan.
+function calcSetupGroups() {
+  const groups = {};
+  quoteList.forEach(item => {
+    if (!item.setupCost || !item.setupKey) return;
+    if (!groups[item.setupKey]) groups[item.setupKey] = {cost: item.setupCost, qty: 0, rows: 0};
+    groups[item.setupKey].qty += item.qty;
+    groups[item.setupKey].rows += 1;
+  });
+  return groups;
+}
+
 function renderList() {
   const wrap   = document.getElementById('quoteListWrap');
   const rowsEl = document.getElementById('quoteRows');
   if (quoteList.length === 0) { wrap.style.display='none'; return; }
   wrap.style.display = 'block';
   const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
-  let html='', grandItems=0, grandWeight=0, grandQty=0;
+  const setupGroups = calcSetupGroups();
+  let html='', grandItems=0, grandWeight=0, grandQty=0, totalSetup=0;
 
   quoteList.forEach(item => {
-    const rt = item.pricePerSt * item.qty;
+    let finalPerSt = item.pricePerSt;
+    let setupShareSt = 0;
+    const g = item.setupKey ? setupGroups[item.setupKey] : null;
+    if (g) {
+      const shareAtCost = g.cost / g.qty;
+      setupShareSt = item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
+      finalPerSt += setupShareSt;
+    }
+    const rt = finalPerSt * item.qty;
     grandItems  += rt;
     grandWeight += item.weightPerSt * item.qty;
     grandQty    += item.qty;
+    if (setupShareSt) totalSetup += setupShareSt * item.qty;
 
-    const setupNote = item.setupCost
-      ? ` · varav uppl. ${fmt(item.setupCost)} kr (ingår i priset)`
+    const setupNote = setupShareSt
+      ? ` · varav uppl. ${fmt(setupShareSt)} kr/st${g.rows>1 ? ' (delat på '+g.rows+' rader)' : ''}`
       : '';
     html += `<div class="quote-row" data-qid="${item.id}">
       <div class="quote-info">
         <div class="quote-title">${item.title}</div>
-        <div class="quote-sub">${item.sub} · ${fmt(item.pricePerSt)} kr/st${setupNote}</div>
+        <div class="quote-sub">${item.sub} · ${fmt(finalPerSt)} kr/st${setupNote}</div>
       </div>
       <div class="quote-qty-wrap">
         <button class="quote-qty-btn" onclick="changeQty(${item.id},-1)">−</button>
@@ -3374,14 +3534,10 @@ function renderList() {
     </div>`;
   });
 
-  // Upplägg är redan inräknat i varje rads st-pris (se addToList) — visas
-  // bara som info per rad ovan, läggs INTE på totalsumman en gång till.
-  const totalSetup = quoteList.reduce((sum, item) => sum + (item.setupCost || 0), 0);
-
   const grandTotal = grandItems;
   rowsEl.innerHTML = html;
   document.getElementById('quoteGrandTotal').textContent = fmt(grandTotal);
-  const setupStr = totalSetup > 0 ? ` · varav uppl. ${fmt(totalSetup)} kr (ingår)` : '';
+  const setupStr = totalSetup > 0 ? ` · varav uppl. ${fmt(totalSetup)} kr (delat, ingår)` : '';
   document.getElementById('quoteFooterSub').textContent = `${grandQty} st · ${fmt(grandWeight)} kg${setupStr}`;
 }
 
@@ -3437,6 +3593,9 @@ function restoreFromList(id) {
     document.getElementById('cutLength').value = s.cutLength;
     document.getElementById('cutRate').value   = s.cutRate;
     state.cutRateUserEdited = s.cutRateUserEdited;
+    state.holes = (s.holes || []).map(h => ({id: Date.now() + Math.random(), d: h.d, qty: h.qty}));
+    renderHoles();
+    syncHolesVisibility();
 
     // Personal
     state.labourEnabled = s.labourEnabled;
@@ -3486,11 +3645,20 @@ function copyList() {
   const fmt = n => n.toLocaleString('sv-SE',{minimumFractionDigits:2,maximumFractionDigits:2});
   let text = `HMV PLÅTPRIS — ${new Date().toLocaleDateString('sv-SE')}\n${'─'.repeat(34)}\n`;
   let total=0, weight=0, qty=0;
+  const setupGroups = calcSetupGroups();
   quoteList.forEach((item,i) => {
-    const rt = item.pricePerSt*item.qty;
+    let finalPerSt = item.pricePerSt;
+    const g = item.setupKey ? setupGroups[item.setupKey] : null;
+    let setupNote = '';
+    if (g) {
+      const shareAtCost = g.cost / g.qty;
+      const setupShareSt = item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
+      finalPerSt += setupShareSt;
+      setupNote = `  (varav uppl. ${fmt(setupShareSt)} kr/st${g.rows>1 ? ' delat på '+g.rows+' rader':''}, ingår)`;
+    }
+    const rt = finalPerSt*item.qty;
     total+=rt; weight+=item.weightPerSt*item.qty; qty+=item.qty;
-    const setupNote = item.setupCost ? `  (varav uppl. ${fmt(item.setupCost)} kr, ingår)` : '';
-    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(item.pricePerSt)} kr/st  =  ${fmt(rt)} kr${setupNote}\n`;
+    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(finalPerSt)} kr/st  =  ${fmt(rt)} kr${setupNote}\n`;
   });
   text += `${'─'.repeat(34)}\nTOTALT: ${fmt(total)} kr\n(${qty} st · ${fmt(weight)} kg)\n`;
   if (navigator.clipboard?.writeText) {

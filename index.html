@@ -1038,7 +1038,7 @@ body.light .input-wrap select {
 // ================================================================
 // Bumpa denna vid varje ändring i filen — visas i headern och används
 // för att jämföra mot main-grenen på GitHub så man ser om man kör senaste.
-const PLATPRIS_VERSION = '1.5.0';
+const PLATPRIS_VERSION = '1.6.0';
 const PLATPRIS_REPO_RAW = 'https://raw.githubusercontent.com/Kingcool88/hmv-platpris/main/index.html';
 
 async function checkForUpdate() {
@@ -1098,11 +1098,9 @@ function buildExplain(lc) {
     ]);
     html += section('Påslag', [
       {formula:`${fmt(lc.matCost)} kr/st × ${lc.QTY} st × (1 + ${lc.matMup}%)  →  Materialpåslag`, result:`${fmt(lc.matSubtotal)} kr`, cls:'cut'},
-      {formula: lc.existingGroupQty > 0
-        ? `+ Upplägg+CAM (delat med ${lc.existingGroupQty} st annat i listan)`
-        : `+ Upplägg+CAM`, result:`${fmt(lc.setupCost)} kr`, cls:'labour'},
       {formula:`+ Nedläggning+gradning (görs på varje bit, delas ej)`, result:`${fmt(lc.handlingCost)} kr`, cls:'labour'},
-      {formula:`(${fmt(lc.matSubtotal)} + ${fmt(lc.labourCostG)}) × (1 + ${lc.prodMup}%) ÷ ${lc.QTY} st  →  Produktpåslag`, result:`${fmt(lc.sellSt)} kr/st`, cls:'accent'},
+      {formula:`(${fmt(lc.matSubtotal)} + ${fmt(lc.handlingCost)}) × (1 + ${lc.prodMup}%) ÷ ${lc.QTY} st  →  Produktpåslag`, result:`${fmt(lc.sellSt)} kr/st`, cls:'accent'},
+      {formula:`Uppläggning (tillkommer separat, engångskostnad per material+tjocklek)`, result:`${fmt(lc.setupCost)} kr`, cls:''},
     ]);
     if (lc.QTY > 1)
       html += section('Totalt', [{formula:`${fmt(lc.sellSt)} kr/st × ${lc.QTY} st`, result:`${fmt(lc.sellTot)} kr`, cls:'accent'}]);
@@ -1140,11 +1138,13 @@ function buildExplain(lc) {
       labRows.push({formula:`${fmtS(lc.cutTimeMin)} min × ${lc.QTY} st × ${fmt(lc.labourPerMin)} kr/min`, result:`${fmt(lc.labourCutCost)} kr`, cls:'labour'});
     }
     labRows.push({formula:`Nedlägg+gradning: ${lc.handleMin} min/st × ${lc.QTY} st × ${fmt(lc.labourPerMin)} kr/min`, result:`${fmt(lc.labourHandleCost)} kr`, cls:'labour'});
-    labRows.push({formula: lc.existingGroupQty > 0
-      ? `Upplägg+CAM (delat med ${lc.existingGroupQty} st annat i listan, samma material+tjocklek)`
-      : `Upplägg+CAM`, result:`${fmt(lc.setupCost)} kr`, cls:'labour'});
     labRows.push({formula:`Personalkostnad totalt`, result:`${fmt(lc.labourCost)} kr`, cls:'labour'});
     html += section('Personal', labRows);
+    if (lc.setupCost > 0) {
+      html += section('Uppläggning', [
+        {formula:`Engångskostnad per material+tjocklek — ingår EJ i styckpriset, delas mellan alla rader i offertlistan med samma material+tjocklek`, result:`${fmt(lc.setupCost)} kr`, cls:''},
+      ]);
+    }
   }
 
   html += section('Summering per st', [
@@ -1848,19 +1848,11 @@ function buildMonitorXml() {
   let rows = [];
   let rowNum = 1;
 
-  const setupGroupsX = calcSetupGroups();
   quoteList.forEach(item => {
     const artnr  = lookupArtnr(item);
     const ben    = item.title;
     const status = artnr ? '✓' : '⚠ Ingen match — fritext';
     matchHtml += '<div>' + status + ' ' + item.title + ' → ' + (artnr||'(fritext)') + ': ' + ben + '</div>';
-    // Slutpris/st = radens eget pris + ev. delad andel av uppläggningskostnaden
-    let finalPerSt = item.pricePerSt;
-    const gX = item.setupKey ? setupGroupsX[item.setupKey] : null;
-    if (gX) {
-      const shareAtCost = gX.cost / gX.qty;
-      finalPerSt += item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
-    }
     rows.push(
       '    <ROW>' +
       '<ROWNO>' + (rowNum++) + '</ROWNO>' +
@@ -1868,7 +1860,25 @@ function buildMonitorXml() {
       '<ARTBEN>' + esc(ben) + '</ARTBEN>' +
       '<ANT>' + item.qty + '</ANT>' +
       '<ENH>st</ENH>' +
-      '<APRIS>' + finalPerSt.toFixed(2) + '</APRIS>' +
+      '<APRIS>' + item.pricePerSt.toFixed(2) + '</APRIS>' +
+      '<VALKOD>SEK</VALKOD>' +
+      '<RABATT>0</RABATT>' +
+      '</ROW>'
+    );
+  });
+
+  // En rad per uppläggsgrupp — engångskostnad, fritext (inget artikelnummer)
+  const setupGroupsX = calcSetupGroups();
+  Object.values(setupGroupsX).forEach(g => {
+    const cost = g.marginEnabled ? g.cost * (1 + g.marginPct/100) : g.cost;
+    rows.push(
+      '    <ROW>' +
+      '<ROWNO>' + (rowNum++) + '</ROWNO>' +
+      '<ARTNR></ARTNR>' +
+      '<ARTBEN>' + esc('Upplägg · ' + g.label) + '</ARTBEN>' +
+      '<ANT>1</ANT>' +
+      '<ENH>st</ENH>' +
+      '<APRIS>' + cost.toFixed(2) + '</APRIS>' +
       '<VALKOD>SEK</VALKOD>' +
       '<RABATT>0</RABATT>' +
       '</ROW>'
@@ -2665,27 +2675,21 @@ function calculate() {
       sawCostG = scG.cuts * sawRate;
     }
 
-    // Personal (upplägg+CAM+hantering) — grov gissar med automatiska
-    // standardtider, annars blir grovpriset orimligt lågt för små ordrar
-    // (fast uppläggskostnad slår igenom mest relativt sett då).
-    // Upplägg+CAM delas med andra rader (grov såväl som detaljerad) i
-    // offertlistan med samma material+tjocklek — nedläggning/gradning görs
-    // på varje bit oavsett och delas därför INTE.
+    // Personal (hantering) — grov gissar med automatiska standardtider.
+    // Upplägg+CAM är en engångskostnad per material+tjocklek och ingår INTE
+    // i styckpriset — den läggs på EN gång i offertlistans totalsumma (se
+    // renderList/calcSetupGroups), annars kostar en ensam liten bit mer per
+    // styck än en stor beställd i större antal, vilket ser konstigt ut för
+    // kunden. Nedläggning/gradning görs på varje bit oavsett och ingår här.
     const hdG    = getHandlingDefaults(state.type, d);
     const lrhG   = parseFloat(document.getElementById('labourRate').value) || 450;
     const lpmG   = lrhG / 60;
-    const setupCostFullG = (hdG.setupMin + hdG.camMin) * lpmG;
-    const setupKeyG = state.mat + '__' + getThickness(d) + 'mm';
-    let existingGroupQtyG = 0;
-    quoteList.forEach(it => { if (it.setupKey === setupKeyG && it.id !== state.editingId) existingGroupQtyG += it.qty; });
-    const totalGroupQtyG = existingGroupQtyG + QTY;
-    const setupCostG = existingGroupQtyG > 0 ? setupCostFullG * (QTY / totalGroupQtyG) : setupCostFullG;
+    const setupCostG = (hdG.setupMin + hdG.camMin) * lpmG; // informativ — tillkommer separat
     const handlingCostG = hdG.handleMin * lpmG * QTY;
-    const labourCostG = setupCostG + handlingCostG;
 
     const matOrderG    = matCostG * QTY;
     const matSubtotalG = (matOrderG + sawCostG) * (1 + matMup);
-    const t15      = matSubtotalG + labourCostG;
+    const t15      = matSubtotalG + handlingCostG; // exkl. upplägg
     const sellTotG = t15 * (1 + prodMup);
     const sellStG  = sellTotG / QTY;
     const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -2706,12 +2710,12 @@ function calculate() {
     }
     gRows += gRow('Mat.påslag ' + (matMup*100).toFixed(0) + '%', fmt(matSubtotalG) + ' kr', 'cut',
       '(' + fmt(matOrderG) + (sawCostG>0?' + ' + fmt(sawCostG):'') + ') × (1 + ' + (matMup*100).toFixed(0) + '%)\n= ' + fmt(matSubtotalG) + ' kr');
-    gRows += gRow(existingGroupQtyG > 0 ? 'Upplägg+CAM (delat med ' + existingGroupQtyG + ' st i listan)' : 'Upplägg+CAM', fmt(setupCostG) + ' kr', 'labour',
-      (hdG.setupMin+hdG.camMin).toFixed(0) + ' min × ' + fmt(lpmG) + ' kr/min' + (existingGroupQtyG > 0 ? '\n÷ delat på ' + totalGroupQtyG + ' st totalt i gruppen' : '') + '\n= ' + fmt(setupCostG) + ' kr\n(auto — samma standardtider som detaljerad kalkyl)');
     gRows += gRow('Nedläggning+gradning', fmt(handlingCostG) + ' kr', 'labour',
       hdG.handleMin + ' min × ' + QTY + ' st × ' + fmt(lpmG) + ' kr/min\n= ' + fmt(handlingCostG) + ' kr\n(görs på varje bit, delas ej)');
     gRows += gRow('Prod.påslag ' + (prodMup*100).toFixed(0) + '%', fmt(sellStG) + ' kr/st', 'sell',
-      '(' + fmt(matSubtotalG) + ' + ' + fmt(labourCostG) + ') × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
+      '(' + fmt(matSubtotalG) + ' + ' + fmt(handlingCostG) + ') × (1 + ' + (prodMup*100).toFixed(0) + '%)\n÷ ' + QTY + ' st\n= ' + fmt(sellStG) + ' kr/st');
+    gRows += gRow('+ Uppläggning (tillkommer separat)', fmt(setupCostG) + ' kr', '',
+      'Engångskostnad per material+tjocklek — läggs INTE på styckpriset.\nSyns som en egen rad längst ner i offertlistan och delas mellan alla rader med samma material+tjocklek (' + state.mat + ' ' + getThickness(d) + ' mm).\n' + (hdG.setupMin+hdG.camMin).toFixed(0) + ' min × ' + fmt(lpmG) + ' kr/min = ' + fmt(setupCostG) + ' kr');
     if (QTY > 1) gRows += gRow('Antal · tot vikt', QTY + ' st · ' + fmt(wKg*QTY) + ' kg', '',
       QTY + ' st × ' + fmt(wKg) + ' kg = ' + fmt(wKg*QTY) + ' kg');
 
@@ -2731,8 +2735,8 @@ function calculate() {
       grov:true, dimStr:displayTitle(d), QTY,
       volCm3:volM3g*1e6, density:state.density,
       weightKg:wKg, P, matCost:wKg*P,
-      sawCostG, labourCostG, setupCost:setupCostG, handlingCost:handlingCostG,
-      existingGroupQty:existingGroupQtyG, matSubtotal:matSubtotalG,
+      sawCostG, setupCost:setupCostG, handlingCost:handlingCostG,
+      matSubtotal:matSubtotalG,
       matMup:(parseFloat(document.getElementById('grovMatMarkup').value)||0),
       prodMup:(parseFloat(document.getElementById('grovProdMarkup').value)||0),
       t15,
@@ -2812,7 +2816,7 @@ function calculate() {
   }
 
   // Personal
-  let labourCost=0, labourCutCost=0, labourSetupCost=0, labourHandleCost=0, cutTimeMin=0, existingGroupQty=0;
+  let labourCost=0, labourCutCost=0, labourSetupCost=0, labourHandleCost=0, cutTimeMin=0;
   if (state.labourEnabled) {
     const lrh  = parseFloat(document.getElementById('labourRate').value) || 450;
     const setup= parseFloat(document.getElementById('setupTime').value)  || 0;
@@ -2835,30 +2839,23 @@ function calculate() {
         labourCutCost = cutTimeMin * lpm * scL.bars;
       }
     }
-    // Upplägget delas med andra rader i offertlistan som redan har samma
-    // material+tjocklek (samma körning/plåt) — förhandsvisningen ska visa
-    // samma delade pris som raden faktiskt får när den läggs till/ligger i
-    // listan, inte hela uppläggskostnaden som om den vore ensam.
-    const setupCostFull = (setup + cam) * lpm;
-    const setupKeyPreview = state.mat + '__' + getThickness(d) + 'mm';
-    quoteList.forEach(it => { if (it.setupKey === setupKeyPreview && it.id !== state.editingId) existingGroupQty += it.qty; });
-    const totalGroupQty = existingGroupQty + QTY;
-    labourSetupCost  = existingGroupQty > 0 ? setupCostFull * (QTY / totalGroupQty) : setupCostFull;
+    // Upplägg+CAM är en engångskostnad per material+tjocklek och ingår INTE
+    // i styckpriset — annars kostar en ensam liten bit mer per styck än en
+    // stor beställd i större antal, vilket ser konstigt ut för kunden. Den
+    // läggs på EN gång i offertlistans totalsumma istället (calcSetupGroups).
+    labourSetupCost  = (setup + cam) * lpm; // informativ — tillkommer separat
     labourHandleCost = hand * lpm * QTY;
-    labourCost = labourCutCost + labourSetupCost + labourHandleCost;
+    labourCost = labourCutCost + labourHandleCost; // exkl. upplägg
 
     document.getElementById('labourCutVal').textContent =
       (state.cutEnabled && (cutTimeMin>0))
         ? `${fmt(labourCutCost)} kr (${(cutTimeMin*QTY).toFixed(1)} min)`
         : '— kr';
 
-    const setupRowLabel = existingGroupQty > 0
-      ? `Upplägg + CAM (delat med ${existingGroupQty} st i listan)`
-      : `Upplägg + CAM (${(setup+cam).toFixed(0)} min)`;
     document.getElementById('labourBreakdown').innerHTML =
       `<div class="info-row"><span>Bearbetningstid (lön)</span><span>${fmt(labourCutCost)} kr</span></div>` +
-      `<div class="info-row"><span>${setupRowLabel}</span><span>${fmt(labourSetupCost)} kr</span></div>` +
-      `<div class="info-row"><span>Nedlägg + gradning (${hand} min × ${QTY} st)</span><span>${fmt(labourHandleCost)} kr</span></div>`;
+      `<div class="info-row"><span>Nedlägg + gradning (${hand} min × ${QTY} st)</span><span>${fmt(labourHandleCost)} kr</span></div>` +
+      `<div class="info-row"><span>+ Upplägg + CAM (${(setup+cam).toFixed(0)} min, tillkommer separat)</span><span>${fmt(labourSetupCost)} kr</span></div>`;
   } else {
     document.getElementById('labourCutVal').textContent = '— kr';
     document.getElementById('labourBreakdown').innerHTML = '';
@@ -2976,15 +2973,17 @@ function calculate() {
         : '2 min/stång × ' + (scTip?.bars||'?') + ' stänger\n× ' + lpm2.toFixed(2) + ' kr/min (' + lrh2 + ' kr/h)\n= ' + fmt(labourCutCost) + ' kr';
       rows += row('Lön bearbetning', fmt(labourCutCost) + ' kr', 'labour', labTip);
     }
-    const sm2 = parseFloat(document.getElementById('setupTime').value)||0;
-    const cm2 = parseFloat(document.getElementById('camTime').value)||0;
     const hm2 = parseFloat(document.getElementById('handleTime').value)||0;
-    rows += row('Upplägg + CAM', `${fmt(labourSetupCost)} kr`, 'labour',
-      `${(sm2+cm2).toFixed(0)} min × ${lpm2.toFixed(2)} kr/min\n= ${fmt(labourSetupCost)} kr`);
     rows += row('Nedlägg + gradning', `${fmt(labourHandleCost)} kr`, 'labour',
       `${hm2} min × ${QTY} st × ${lpm2.toFixed(2)} kr/min\n= ${fmt(labourHandleCost)} kr`);
     rows += row('Personal totalt', `${fmt(labourCost)} kr`, 'labour',
-      `${fmt(labourCutCost)} + ${fmt(labourSetupCost)} + ${fmt(labourHandleCost)}\n= ${fmt(labourCost)} kr`);
+      `${fmt(labourCutCost)} + ${fmt(labourHandleCost)}\n= ${fmt(labourCost)} kr`);
+  }
+  if (state.labourEnabled && labourSetupCost > 0) {
+    const sm2 = parseFloat(document.getElementById('setupTime').value)||0;
+    const cm2 = parseFloat(document.getElementById('camTime').value)||0;
+    rows += row('+ Uppläggning (tillkommer separat)', `${fmt(labourSetupCost)} kr`, '',
+      `${(sm2+cm2).toFixed(0)} min × ${(parseFloat(document.getElementById('labourRate').value)||450)/60} kr/min = ${fmt(labourSetupCost)} kr\nEngångskostnad per material+tjocklek — ingår INTE i styckpriset ovan.\nSyns som en egen rad längst ner i offertlistan och delas mellan alla rader med samma material+tjocklek.`);
   }
 
   if (state.cutEnabled || state.labourEnabled) {
@@ -3035,7 +3034,7 @@ function calculate() {
     labourPerMin: (parseFloat(document.getElementById('labourRate').value)||450)/60,
     handleMin: parseFloat(document.getElementById('handleTime').value)||0,
     labourCutCost, labourHandleCost, labourCost,
-    setupCost: labourSetupCost, existingGroupQty,
+    setupCost: labourSetupCost,
     inCostPerSt: inCost/QTY,  // inCost är nu per order
     marginEnabled: state.marginEnabled, MRG,
     marginPerSt: marginCost/QTY,
@@ -3439,7 +3438,7 @@ function addToList() {
       labourCutCost = cutTimeMin * lpm * scA2.bars;
     }
     labourHandleCost = hand * lpm * QTY;
-    labourCost = labourCutCost + labourHandleCost; // upplägg hanteras separat — delas mellan rader i renderList()
+    labourCost = labourCutCost + labourHandleCost; // upplägg tillkommer separat som engångsrad, se renderList()/calcSetupGroups()
   }
 
   const setupCostItem = state.labourEnabled
@@ -3523,17 +3522,22 @@ function addToList() {
   }, 600);
 }
 
-// Delar uppläggningskostnaden (upplägg+CAM) mellan alla rader i offertlistan
-// som har samma material+tjocklek — de bränns/skärs ju i samma körning från
-// samma plåt, så uppställningen ska bara betalas en gång, inte en gång per
-// detaljtyp. Returnerar {key -> kr/st vid full marginal} — margin appliceras
-// per rad utifrån dess egen marginPct nedan.
+// Uppläggningen (upplägg+CAM) är en engångskostnad per material+tjocklek —
+// den bakas INTE in i någon rads styckpris (då kostar en ensam liten bit
+// mer per styck än en stor beställd i större antal, vilket ser konstigt ut
+// för kunden). Istället läggs den på EN gång per grupp i totalsumman,
+// oavsett hur många rader eller vilket beräkningsläge (Grov/detaljerad)
+// som delar samma material+tjocklek — de bränns ju i samma körning.
 function calcSetupGroups() {
   const groups = {};
   quoteList.forEach(item => {
     if (!item.setupCost || !item.setupKey) return;
-    if (!groups[item.setupKey]) groups[item.setupKey] = {cost: item.setupCost, qty: 0, rows: 0};
-    groups[item.setupKey].qty += item.qty;
+    if (!groups[item.setupKey]) {
+      groups[item.setupKey] = {
+        cost: item.setupCost, rows: 0, label: item.setupLabel,
+        marginEnabled: item.marginEnabled, marginPct: item.marginPct||0,
+      };
+    }
     groups[item.setupKey].rows += 1;
   });
   return groups;
@@ -3547,30 +3551,18 @@ function renderList() {
   wrap.style.display = 'block';
   const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2});
   const setupGroups = calcSetupGroups();
-  let html='', grandItems=0, grandWeight=0, grandQty=0, totalSetup=0;
+  let html='', grandItems=0, grandWeight=0, grandQty=0;
 
   quoteList.forEach(item => {
-    let finalPerSt = item.pricePerSt;
-    let setupShareSt = 0;
-    const g = item.setupKey ? setupGroups[item.setupKey] : null;
-    if (g) {
-      const shareAtCost = g.cost / g.qty;
-      setupShareSt = item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
-      finalPerSt += setupShareSt;
-    }
-    const rt = finalPerSt * item.qty;
+    const rt = item.pricePerSt * item.qty;
     grandItems  += rt;
     grandWeight += item.weightPerSt * item.qty;
     grandQty    += item.qty;
-    if (setupShareSt) totalSetup += setupShareSt * item.qty;
 
-    const setupNote = setupShareSt
-      ? ` · varav uppl. ${fmt(setupShareSt)} kr/st${g.rows>1 ? ' (delat på '+g.rows+' rader)' : ''}`
-      : '';
     html += `<div class="quote-row" data-qid="${item.id}">
       <div class="quote-info">
         <div class="quote-title">${item.title}</div>
-        <div class="quote-sub">${item.sub} · ${fmt(finalPerSt)} kr/st${setupNote}</div>
+        <div class="quote-sub">${item.sub} · ${fmt(item.pricePerSt)} kr/st</div>
       </div>
       <div class="quote-qty-wrap">
         <button class="quote-qty-btn" onclick="changeQty(${item.id},-1)">−</button>
@@ -3587,10 +3579,29 @@ function renderList() {
     </div>`;
   });
 
-  const grandTotal = grandItems;
+  // Engångsrad per uppläggsgrupp — läggs på en gång, oavsett antal rader/st
+  let totalSetup = 0;
+  Object.values(setupGroups).forEach(g => {
+    const cost = g.marginEnabled ? g.cost * (1 + g.marginPct/100) : g.cost;
+    totalSetup += cost;
+    html += `<div class="quote-row" style="background:rgba(240,165,0,.06);border-left:3px solid var(--accent);">
+      <div class="quote-info">
+        <div class="quote-title" style="color:var(--accent);">Upplägg · ${g.label}</div>
+        <div class="quote-sub">Engångskostnad${g.rows>1 ? ' · delas av '+g.rows+' rader' : ''}</div>
+      </div>
+      <div style="flex:1;"></div>
+      <div class="quote-prices">
+        <div class="quote-total" style="color:var(--accent);">${fmt(cost)}</div>
+        <div class="quote-unit">kr</div>
+      </div>
+      <div style="width:56px;"></div>
+    </div>`;
+  });
+
+  const grandTotal = grandItems + totalSetup;
   rowsEl.innerHTML = html;
   document.getElementById('quoteGrandTotal').textContent = fmt(grandTotal);
-  const setupStr = totalSetup > 0 ? ` · varav uppl. ${fmt(totalSetup)} kr (delat, ingår)` : '';
+  const setupStr = totalSetup > 0 ? ` · upplägg ${fmt(totalSetup)} kr` : '';
   document.getElementById('quoteFooterSub').textContent = `${grandQty} st · ${fmt(grandWeight)} kg${setupStr}`;
 }
 
@@ -3700,20 +3711,16 @@ function copyList() {
   const fmt = n => n.toLocaleString('sv-SE',{minimumFractionDigits:2,maximumFractionDigits:2});
   let text = `HMV PLÅTPRIS — ${new Date().toLocaleDateString('sv-SE')}\n${'─'.repeat(34)}\n`;
   let total=0, weight=0, qty=0;
-  const setupGroups = calcSetupGroups();
   quoteList.forEach((item,i) => {
-    let finalPerSt = item.pricePerSt;
-    const g = item.setupKey ? setupGroups[item.setupKey] : null;
-    let setupNote = '';
-    if (g) {
-      const shareAtCost = g.cost / g.qty;
-      const setupShareSt = item.marginEnabled ? shareAtCost * (1 + (item.marginPct||0)/100) : shareAtCost;
-      finalPerSt += setupShareSt;
-      setupNote = `  (varav uppl. ${fmt(setupShareSt)} kr/st${g.rows>1 ? ' delat på '+g.rows+' rader':''}, ingår)`;
-    }
-    const rt = finalPerSt*item.qty;
+    const rt = item.pricePerSt*item.qty;
     total+=rt; weight+=item.weightPerSt*item.qty; qty+=item.qty;
-    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(finalPerSt)} kr/st  =  ${fmt(rt)} kr${setupNote}\n\n`;
+    text += `${i+1}. ${item.title}\n   ${item.sub}\n   ${item.qty} st  ×  ${fmt(item.pricePerSt)} kr/st  =  ${fmt(rt)} kr\n\n`;
+  });
+  const setupGroups = calcSetupGroups();
+  Object.values(setupGroups).forEach(g => {
+    const cost = g.marginEnabled ? g.cost * (1 + g.marginPct/100) : g.cost;
+    total += cost;
+    text += `Upplägg · ${g.label} (engångskostnad${g.rows>1 ? ', delas av '+g.rows+' rader':''}): ${fmt(cost)} kr\n\n`;
   });
   text += `${'─'.repeat(34)}\nTOTALT: ${fmt(total)} kr\n(${qty} st · ${fmt(weight)} kg)\n`;
   if (navigator.clipboard?.writeText) {
